@@ -5,18 +5,19 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
 		Width="480" Height="240"
+		Opacity="0.90"
         x:Class="Scry.Views.ScryWindow"
         x:DataType="vm:ScryWindowViewModel"
         Icon="/Assets/avalonia-logo.ico"
         Title="Scry"
-        TransparencyLevelHint="AcrylicBlur"
+        TransparencyLevelHint="Transparent"
         ExtendClientAreaToDecorationsHint="True"
         ExtendClientAreaChromeHints="NoChrome"
         CanResize="False"
         Topmost="True"
         ShowInTaskbar="True"
         WindowStartupLocation="CenterScreen"
-        Background="#CC1E1E1E"
+        Background="Transparent"
         SystemDecorations="None"
 		Padding="0"
 		KeyDown="OnKeyDown">
@@ -55,7 +56,9 @@
 
 			<!-- Command input -->
 			<TextBox Grid.Row="1"
+					 x:Name="CommandTextBox"
 					 Watermark="Type a command…"
+					 Text="{Binding CommandText, Mode=TwoWay}"
 					 FontSize="13"
 					 Height="26"
 					 VerticalContentAlignment="Center"
@@ -69,8 +72,8 @@
 
 			<!-- Results fill remaining space -->
 			<ListBox Grid.Row="2"
+					 x:Name="ResultsList"
 					 ItemsSource="{Binding Results}"
-					 SelectedItem="{Binding SelectedResult}"
 					 BorderThickness="0"
 					 Background="Transparent"
 					 Foreground="#E0F0FF"
@@ -79,7 +82,7 @@
 				<ListBox.ItemTemplate>
 					<DataTemplate>
 						<TextBlock Text="{Binding}"
-								   Padding="6,2"/>
+								   Padding="6,0"/>
 					</DataTemplate>
 				</ListBox.ItemTemplate>
 			</ListBox>

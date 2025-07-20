@@ -1,5 +1,4 @@
 using Avalonia;
-using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Data.Core.Plugins;
 using Avalonia.Markup.Xaml;
@@ -24,6 +23,7 @@ namespace Scry
                 // Avoid duplicate validations from both Avalonia and the CommunityToolkit. 
                 // More info: https://docs.avaloniaui.net/docs/guides/development-guides/data-validation#manage-validationplugins
                 DisableAvaloniaDataAnnotationValidation();
+
                 var window = new ScryWindow
                 {
                     DataContext = new ScryWindowViewModel(),
@@ -33,6 +33,7 @@ namespace Scry
                 desktop.MainWindow = window;
 
                 // Ugly way to hide window on first open, EventHandler needs to reference itself
+                // Could replace this with a placeholder "Scry is running!" thing
                 EventHandler? onFirstOpen = null;
                 onFirstOpen = (s, e) =>
                 {
@@ -41,10 +42,16 @@ namespace Scry
                 };
                 window.Opened += onFirstOpen;
 
-                GlobalHotkey.Register(() => Toggle(window));
-            }
+                // Hide window on unfocus
+                window.Deactivated += (s, e) =>
+                {
+                    window.Hide();
+                };
 
-            base.OnFrameworkInitializationCompleted();
+                GlobalHotkey.Register(() => Toggle(window, desktop));
+
+                base.OnFrameworkInitializationCompleted();
+            }
         }
 
         private void DisableAvaloniaDataAnnotationValidation()
@@ -60,7 +67,7 @@ namespace Scry
             }
         }
 
-        private void Toggle(Window w)
+        private void Toggle(ScryWindow w, IClassicDesktopStyleApplicationLifetime desktop)
         {
             if (w.IsVisible)
             {
