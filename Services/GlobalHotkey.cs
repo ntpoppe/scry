@@ -3,7 +3,7 @@ using System;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 
-namespace Scry;
+namespace Scry.Services;
 
 /// <summary>
 /// Listens for low-level keyboard events when the app window is closed.
@@ -19,11 +19,11 @@ internal static class GlobalHotkey
     private const int VK_CONTROL = 0x11;
 
     // Delegate type matching the Win32 hook prototype
-    private delegate IntPtr LowLevelKeyboardProc(int nCode, IntPtr wParam, IntPtr lParam);
+    private delegate nint LowLevelKeyboardProc(int nCode, nint wParam, nint lParam);
     private static readonly LowLevelKeyboardProc _proc = HookCallback;
 
     // Handle to the installed hook
-    private static IntPtr _hookID = IntPtr.Zero;
+    private static nint _hookID = nint.Zero;
 
     // User-provided callback to invoke when hotkey is pressed
     private static Action? _onWake;
@@ -41,7 +41,7 @@ internal static class GlobalHotkey
     /// <summary>
     /// P/Invoke to install the hook into the calling process.
     /// </summary>
-    private static IntPtr SetHook(LowLevelKeyboardProc proc)
+    private static nint SetHook(LowLevelKeyboardProc proc)
     {
         using var curProcess = Process.GetCurrentProcess();
         using var curModule = curProcess.MainModule;
@@ -63,10 +63,10 @@ internal static class GlobalHotkey
     /// <param name="nCode">The type of the event</param>
     /// <param name="wParam">The type of message</param>
     /// <param name="lParam">Pointer to KBDLLHOOKSTRUCT (keyboard event data)</param>
-    private static IntPtr HookCallback(int nCode, IntPtr wParam, IntPtr lParam)
+    private static nint HookCallback(int nCode, nint wParam, nint lParam)
     {
         // Only handle key-down events with a valid code
-        if (nCode >= 0 && wParam == (IntPtr)WM_KEYDOWN)
+        if (nCode >= 0 && wParam == WM_KEYDOWN)
         {
             int vkCode = Marshal.ReadInt32(lParam);
             Console.WriteLine("Toggled");
@@ -86,27 +86,27 @@ internal static class GlobalHotkey
     #region Win32 API
     // Installs a hook procedure into the hook chain. idHook=WH_KEYBOARD_LL for low-level keyboard events.
     [DllImport("user32.dll", SetLastError = true)]
-    private static extern IntPtr SetWindowsHookEx(
+    private static extern nint SetWindowsHookEx(
         int idHook,
         LowLevelKeyboardProc lpfn,
-        IntPtr hMod,
+        nint hMod,
         uint dwThreadId);
 
     // Removes a hook procedure installed in SetWindowsHookEx.
     [DllImport("user32.dll", SetLastError = true)]
-    private static extern bool UnhookWindowsHookEx(IntPtr hhk);
+    private static extern bool UnhookWindowsHookEx(nint hhk);
 
     // Passes the hook information to the next hook procedure in the current hook chain.
     [DllImport("user32.dll", SetLastError = true)]
-    private static extern IntPtr CallNextHookEx(
-        IntPtr hhk,
+    private static extern nint CallNextHookEx(
+        nint hhk,
         int nCode,
-        IntPtr wParam,
-        IntPtr lParam);
+        nint wParam,
+        nint lParam);
 
     // Retrieves a module handle for the specified module. In this case, this executables module.
     [DllImport("kernel32.dll", CharSet = CharSet.Auto, SetLastError = true)]
-    private static extern IntPtr GetModuleHandle(string lpModuleName);
+    private static extern nint GetModuleHandle(string lpModuleName);
 
     // Retrieves the state of the specified virtual key. High-order bit set = key is down. Gets the "Space" key state in this context.
     [DllImport("user32.dll")]

@@ -9,24 +9,31 @@ public partial class ScryWindowViewModel : ViewModelBase
 {
     [ObservableProperty]
     private string _commandText = string.Empty;
+
+    [ObservableProperty]
+    private string? _errorMessage;
+
     private readonly IProcessLauncher _launcher;
 
-    public IRelayCommand LaunchCommand { get; set; }
+    public IRelayCommand LaunchCommand { get; }
 
-    public ScryWindowViewModel() : this(new ProcessLauncher())
+    public ScryWindowViewModel()
     {
-    }
-
-    public ScryWindowViewModel(IProcessLauncher launcher)
-    {
-        _launcher = launcher;
         LaunchCommand = new RelayCommand(OnLaunch);
+        _launcher = new ProcessLauncher();
     }
 
     private void OnLaunch()
     {
-        _launcher.Launch(CommandText);
-        // clear & hide window here via an event or callback
+        var result = _launcher.Launch(CommandText);
+        if (!result.Succeeded)
+        {
+            ErrorMessage = $"Could not launch: {result.ErrorMessage}";
+            return;
+        }
+
+        CommandText = string.Empty;
+        ErrorMessage = null;
     }
 
     public List<string> Results { get; } = new List<string>()

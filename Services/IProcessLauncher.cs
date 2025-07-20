@@ -1,6 +1,8 @@
-﻿namespace Scry.Services;
+﻿using Scry.Models;
+
+namespace Scry.Services;
 
 public interface IProcessLauncher
 {
-    void Launch(string pathOrUrl);
+    LaunchResult Launch(string pathOrUrl);
 }

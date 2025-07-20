@@ -43,7 +43,6 @@ public partial class ScryWindow : Window
 
         base.Show();
 
-        // 4) restore focus
         CommandTextBox.Focus();
     }
 }

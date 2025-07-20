@@ -3,6 +3,7 @@
         xmlns:vm="using:Scry.ViewModels"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+		xmlns:conv="clr-namespace:Scry.Converters"
         mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
 		Width="480" Height="240"
 		Opacity="0.90"
@@ -26,6 +27,15 @@
         <vm:ScryWindowViewModel/>
     </Design.DataContext>
 
+	<Window.Resources>
+	  <conv:NullToBoolConverter x:Key="NullToBool"/>
+	</Window.Resources>
+
+	<Window.KeyBindings>
+		<KeyBinding Gesture="Enter"
+					Command="{Binding LaunchCommand}" />
+    </Window.KeyBindings>
+
 	<Border CornerRadius="8"
 			Padding="10"
 			Margin="2">
@@ -44,7 +54,7 @@
 							  OffsetY="2"/>
 		</Border.Effect>
 
-		<Grid RowDefinitions="Auto,Auto,*" ColumnDefinitions="*">
+		<Grid RowDefinitions="Auto,Auto,Auto,*">
 			<!-- Branding header -->
 			<TextBlock Grid.Row="0"
 					   Text="Scry"
@@ -70,8 +80,16 @@
 					 CornerRadius="4"
 					 MaxLength="25"/>
 
+			<TextBlock Grid.Row="2"
+					   Margin="0,8,0,0"
+					   TextAlignment="Center"
+					   VerticalAlignment="Center"
+					   Text="{Binding ErrorMessage}" 
+					   Foreground="Tomato"
+			           IsVisible="{Binding ErrorMessage, Converter={StaticResource NullToBool}}"/>
+
 			<!-- Results fill remaining space -->
-			<ListBox Grid.Row="2"
+			<ListBox Grid.Row="3"
 					 x:Name="ResultsList"
 					 ItemsSource="{Binding Results}"
 					 BorderThickness="0"
@@ -86,7 +104,6 @@
 					</DataTemplate>
 				</ListBox.ItemTemplate>
 			</ListBox>
-
 		</Grid>
 	</Border>
 </Window>
