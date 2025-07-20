@@ -5,28 +5,27 @@ using System.Diagnostics;
 
 namespace Scry.Services;
 
-public class ProcessLauncher : IProcessLauncher
+public class ProcessExecutor : IProcessExecutor
 {
     private List<string> _validPrefixes = new()
     {
         "run"
     };
 
-
-    public LaunchResult Launch(string command)
+    public ExecuteResult Execute(string command)
     {
         if (string.IsNullOrWhiteSpace(command))
-            return new LaunchResult(false, "Empty command");
+            return new ExecuteResult(false, "Empty command");
 
-        var parts = command.Split(' ', 2, StringSplitOptions.RemoveEmptyEntries);
+        var parts = command.TrimEnd().Split(' ', 2, StringSplitOptions.RemoveEmptyEntries);
         if (parts.Length != 2)
-            return new LaunchResult(false, "Invalid part length");
+            return new ExecuteResult(false, "Invalid part length");
 
         var prefix = parts[0].ToLowerInvariant();
         var key = parts[1].ToLowerInvariant();
 
         if (!_validPrefixes.Contains(prefix))
-            return new LaunchResult(false, "Invalid prefix");
+            return new ExecuteResult(false, "Invalid prefix");
 
         switch (prefix)
         {
@@ -37,7 +36,7 @@ public class ProcessLauncher : IProcessLauncher
         }
     }
 
-    private LaunchResult HandleRun(string key)
+    private ExecuteResult HandleRun(string key)
     {
         var path = key switch
         {
@@ -46,16 +45,16 @@ public class ProcessLauncher : IProcessLauncher
         };
 
         if (path is null)
-            return new LaunchResult(false, "Path not found");
+            return new ExecuteResult(false, "Path not found");
 
         try
         {
             Process.Start(new ProcessStartInfo(path) { UseShellExecute = true });
-            return new LaunchResult(true);
+            return new ExecuteResult(true);
         }
         catch (Exception ex)
         {
-            return new LaunchResult(false, ex.Message);
+            return new ExecuteResult(false, ex.Message);
         }
     }
 }

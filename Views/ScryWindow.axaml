@@ -1,109 +1,121 @@
-<Window xmlns="https://github.com/avaloniaui"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:vm="using:Scry.ViewModels"
-        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-		xmlns:conv="clr-namespace:Scry.Converters"
-        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
-		Width="480" Height="240"
-		Opacity="0.90"
-        x:Class="Scry.Views.ScryWindow"
-        x:DataType="vm:ScryWindowViewModel"
-        Icon="/Assets/avalonia-logo.ico"
-        Title="Scry"
-        TransparencyLevelHint="Transparent"
-        ExtendClientAreaToDecorationsHint="True"
-        ExtendClientAreaChromeHints="NoChrome"
-        CanResize="False"
-        Topmost="True"
-        ShowInTaskbar="True"
-        WindowStartupLocation="CenterScreen"
-        Background="Transparent"
-        SystemDecorations="None"
-		Padding="0"
-		KeyDown="OnKeyDown">
+<Window
+    x:Class="Scry.Views.ScryWindow"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:conv="clr-namespace:Scry.Converters"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:vm="using:Scry.ViewModels"
+    Title="Scry"
+    Width="480"
+    Height="240"
+    Padding="0"
+    d:DesignHeight="450"
+    d:DesignWidth="800"
+    x:DataType="vm:ScryWindowViewModel"
+    Background="Transparent"
+    CanResize="False"
+    ExtendClientAreaChromeHints="NoChrome"
+    ExtendClientAreaToDecorationsHint="True"
+    Icon="/Assets/avalonia-logo.ico"
+    KeyDown="OnKeyDown"
+    Opacity="0.95"
+    ShowInTaskbar="True"
+    SystemDecorations="None"
+    Topmost="True"
+    TransparencyLevelHint="Transparent"
+    WindowStartupLocation="CenterScreen"
+    mc:Ignorable="d">
 
     <Design.DataContext>
-        <vm:ScryWindowViewModel/>
+        <vm:ScryWindowViewModel />
     </Design.DataContext>
 
-	<Window.Resources>
-	  <conv:NullToBoolConverter x:Key="NullToBool"/>
-	</Window.Resources>
+    <Window.Resources>
+        <conv:NullToBoolConverter x:Key="NullToBool" />
+    </Window.Resources>
 
-	<Window.KeyBindings>
-		<KeyBinding Gesture="Enter"
-					Command="{Binding LaunchCommand}" />
+    <Window.KeyBindings>
+        <KeyBinding Command="{Binding LaunchCommand}" Gesture="Enter" />
+        <KeyBinding Command="{Binding MoveDownCommand}" Gesture="Down" />
+        <KeyBinding Command="{Binding MoveUpCommand}" Gesture="Up" />
     </Window.KeyBindings>
 
-	<Border CornerRadius="8"
-			Padding="10"
-			Margin="2">
-		<!-- decorative gradient + transparency -->
-		<Border.Background>
-			<LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
-				<GradientStop Color="#CC262738" Offset="0.0"/>
-				<GradientStop Color="#CC64576B" Offset="1.0"/>
-			</LinearGradientBrush>
-		</Border.Background>
+    <Border
+        Margin="2"
+        Padding="10"
+        CornerRadius="8">
+        <!--  decorative gradient + transparency  -->
+        <Border.Background>
+            <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                <GradientStop Offset="0.0" Color="#CC1E1A2E" />
+                <GradientStop Offset="1.0" Color="#CC5F4D7B" />
+            </LinearGradientBrush>
+        </Border.Background>
 
-		<Border.Effect>
-			<DropShadowEffect Color="#000000"
-							  BlurRadius="10"
-							  Opacity="0.2"
-							  OffsetY="2"/>
-		</Border.Effect>
+        <Border.Effect>
+            <DropShadowEffect
+                BlurRadius="10"
+                OffsetY="2"
+                Opacity="0.2"
+                Color="#000000" />
+        </Border.Effect>
 
-		<Grid RowDefinitions="Auto,Auto,Auto,*">
-			<!-- Branding header -->
-			<TextBlock Grid.Row="0"
-					   Text="Scry"
-					   FontSize="20"
-					   FontWeight="Bold"
-					   Foreground="#E0F0FF"
-					   HorizontalAlignment="Center"
-					   Margin="0,0,0,6"/>
+        <Grid RowDefinitions="Auto,Auto,Auto,*">
+            <!--  Branding header  -->
+            <TextBlock
+                Grid.Row="0"
+                Margin="0,0,0,6"
+                HorizontalAlignment="Center"
+                FontSize="20"
+                FontWeight="Bold"
+                Foreground="#E0F0FF"
+                Text="Scry" />
 
-			<!-- Command input -->
-			<TextBox Grid.Row="1"
-					 x:Name="CommandTextBox"
-					 Watermark="Type a command…"
-					 Text="{Binding CommandText, Mode=TwoWay}"
-					 FontSize="13"
-					 Height="26"
-					 VerticalContentAlignment="Center"
-					 Padding="6,0"
-					 Background="#55262738"
-					 BorderBrush="#5564576B"
-					 Foreground="#E0F0FF"
-					 BorderThickness="1"
-					 CornerRadius="4"
-					 MaxLength="25"/>
+            <!--  Command input  -->
+            <TextBox
+                x:Name="CommandTextBox"
+                Grid.Row="1"
+                Height="26"
+                Padding="6,0"
+                VerticalContentAlignment="Center"
+                Background="#55262738"
+                BorderBrush="#5564576B"
+                BorderThickness="1"
+                CornerRadius="4"
+                FontSize="13"
+                Foreground="#E0F0FF"
+                MaxLength="25"
+                Text="{Binding CommandText, Mode=TwoWay}"
+                Watermark="Type a command…" />
 
-			<TextBlock Grid.Row="2"
-					   Margin="0,8,0,0"
-					   TextAlignment="Center"
-					   VerticalAlignment="Center"
-					   Text="{Binding ErrorMessage}" 
-					   Foreground="Tomato"
-			           IsVisible="{Binding ErrorMessage, Converter={StaticResource NullToBool}}"/>
+            <TextBlock
+                Grid.Row="2"
+                Margin="0,8,0,0"
+                VerticalAlignment="Center"
+                Foreground="Tomato"
+                IsVisible="{Binding ErrorMessage, Converter={StaticResource NullToBool}}"
+                Text="{Binding ErrorMessage}"
+                TextAlignment="Center" />
 
-			<!-- Results fill remaining space -->
-			<ListBox Grid.Row="3"
-					 x:Name="ResultsList"
-					 ItemsSource="{Binding Results}"
-					 BorderThickness="0"
-					 Background="Transparent"
-					 Foreground="#E0F0FF"
-					 FontSize="13"
-					 Margin="0,8,0,0">
-				<ListBox.ItemTemplate>
-					<DataTemplate>
-						<TextBlock Text="{Binding}"
-								   Padding="6,0"/>
-					</DataTemplate>
-				</ListBox.ItemTemplate>
-			</ListBox>
-		</Grid>
-	</Border>
+            <!--  Results fill remaining space  -->
+            <ListBox
+                Name="ResultsList"
+                Grid.Row="3"
+                Margin="0,8,0,0"
+                Background="Transparent"
+                BorderThickness="0"
+                FontSize="13"
+                Foreground="#E0F0FF"
+                ItemsSource="{Binding Items}"
+                SelectedItem="{Binding SelectedItem}"
+				SelectedIndex="{Binding SelectedIndex}">
+                <ListBox.ItemTemplate>
+                    <DataTemplate>
+						<TextBlock Text="{Binding .}" Padding="4"/>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+        </Grid>
+    </Border>
 </Window>

@@ -1,5 +1,6 @@
 using Avalonia.Controls;
 using Avalonia.Input;
+using Avalonia.Interactivity;
 using Scry.ViewModels;
 
 namespace Scry.Views;
@@ -14,7 +15,7 @@ public partial class ScryWindow : Window
         CommandTextBox.LostFocus += CommandTextBox_LostFocus;
     }
 
-    private void CommandTextBox_LostFocus(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+    private void CommandTextBox_LostFocus(object? sender, RoutedEventArgs e)
     {
         if (DataContext is ScryWindowViewModel vm)
             vm.CommandText = string.Empty;
@@ -37,12 +38,25 @@ public partial class ScryWindow : Window
     public override void Show()
     {
         if (DataContext is ScryWindowViewModel vm)
-            vm.CommandText = string.Empty;
-
-        CommandTextBox.Clear();
+            ResetText(vm);
 
         base.Show();
-
         CommandTextBox.Focus();
+    }
+
+    public override void Hide()
+    {
+        if (DataContext is ScryWindowViewModel vm)
+            ResetText(vm);
+
+        base.Hide();
+    }
+
+    private void ResetText(ScryWindowViewModel vm)
+    {
+        vm.CommandText = string.Empty;
+        vm.ErrorMessage = null;
+        vm.ResetItems();
+        CommandTextBox.Clear();
     }
 }
