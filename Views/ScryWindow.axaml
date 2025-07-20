@@ -18,7 +18,8 @@
         WindowStartupLocation="CenterScreen"
         Background="#CC1E1E1E"
         SystemDecorations="None"
-		Padding="0">
+		Padding="0"
+		KeyDown="OnKeyDown">
 
     <Design.DataContext>
         <vm:ScryWindowViewModel/>
