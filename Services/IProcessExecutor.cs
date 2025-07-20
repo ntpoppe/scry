@@ -1,4 +1,6 @@
-﻿namespace Scry.Services;
+﻿using Scry.Models;
+
+namespace Scry.Services;
 
 public interface IProcessExecutor
 {

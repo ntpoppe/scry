@@ -4,5 +4,5 @@ public enum CommandPrefix
 {
     Run,
     Web,
-    Exec
+    Script
 }

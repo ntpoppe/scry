@@ -23,19 +23,20 @@ public partial class ScryWindowViewModel : ViewModelBase
     [ObservableProperty]
     private string? _errorMessage;
 
-    private readonly IProcessExecutor _executor;
+    [ObservableProperty]
+    private bool _executeReady;
+
+    [ObservableProperty]
+    private CommandPrefix? _currentPrefix;
 
     public IRelayCommand EnterCommand { get; }
     public IRelayCommand MoveDownCommand { get; }
     public IRelayCommand MoveUpCommand { get; }
 
-    // Collection bound to ListBox, starts with prefixes then moves to executables
-    public ObservableCollection<string> Items { get; } =
-        new ObservableCollection<string>(Enum.GetNames<CommandPrefix>()
-                                             .Select(n => n.ToLowerInvariant()));
+    private readonly IProcessExecutor _executor;
 
-    // Remember which prefix was chosen
-    private CommandPrefix? _currentPrefix;
+    // Collection bound to ListBox, starts with prefixes then moves to executables
+    public ObservableCollection<string> Items { get; } = new();
 
     // Map each prefix to its list of valid commands, temporary until fetch
     private readonly Dictionary<CommandPrefix, List<string>> _optionsMap =
@@ -43,7 +44,7 @@ public partial class ScryWindowViewModel : ViewModelBase
         {
             { CommandPrefix.Run, new List<string> { "notepad", "calculator" } },
             { CommandPrefix.Web, new List<string> { "chatgpt", "youtube" } },
-            { CommandPrefix.Exec, new List<string>() }
+            { CommandPrefix.Script, new List<string>() }
         };
 
     public ScryWindowViewModel() : this(new ProcessExecutor()) { }
@@ -51,14 +52,48 @@ public partial class ScryWindowViewModel : ViewModelBase
     public ScryWindowViewModel(IProcessExecutor executor)
     {
         _executor = executor;
-        EnterCommand = new RelayCommand(OnEnterPressed);
-        MoveUpCommand = new RelayCommand(OnMoveUp);
-        MoveDownCommand = new RelayCommand(OnMoveDown);
+        EnterCommand = new RelayCommand(EnterPressed);
+        MoveUpCommand = new RelayCommand(MoveUp);
+        MoveDownCommand = new RelayCommand(MoveDown);
+        PopulateItems(GetPrefixes());
     }
 
-    private void OnEnterPressed()
+    private void EnterPressed()
     {
+        if (TryExecute()) return;
+        if (SetPrefix()) return;
+        ChooseCommand();
+    }
 
+    private bool TryExecute()
+    {
+        if (!ExecuteReady) return false;
+        Execute();
+        return true;
+    }
+
+    private bool SetPrefix()
+    {
+        if (CurrentPrefix == null && Enum.TryParse<CommandPrefix>(SelectedItem, true, out var prefix))
+        {
+            CurrentPrefix = prefix;
+            CommandText = prefix.ToString().ToLowerInvariant();
+
+            if (_optionsMap.TryGetValue(prefix, out var opts))
+                PopulateItems(opts);
+
+            MoveDown();
+            return true;
+        }
+
+        return false;
+    }
+
+    private void ChooseCommand()
+    {
+        CommandText = $"{CurrentPrefix?.ToString().ToLowerInvariant()} {SelectedItem}";
+        Items.Clear();
+        ExecuteReady = true;
     }
 
     private void Execute()
@@ -72,49 +107,36 @@ public partial class ScryWindowViewModel : ViewModelBase
 
         CommandText = string.Empty;
         ErrorMessage = null;
+        ExecuteReady = false;
     }
 
-    private void OnMoveUp()
+    private void MoveUp()
     {
         if (SelectedIndex > 0)
             SelectedIndex--;
     }
 
-    private void OnMoveDown()
+    private void MoveDown()
     {
         if (SelectedIndex < Items.Count - 1)
             SelectedIndex++;
     }
 
-    partial void OnSelectedItemChanged(string? value)
-    {
-        // TODO: Find a better way to handle the else branch catching a null after click
-        //if (value == null && _currentPrefix != null)
-        //    return;
-
-        //// If prefix entered, switch the items to the corresponding commands
-        //if (Enum.TryParse<CommandPrefix>(value, true, out var prefix))
-        //{
-        //    _currentPrefix = prefix;
-        //    CommandText = prefix.ToString().ToLowerInvariant();
-
-        //    Items.Clear();
-        //    if (_optionsMap.TryGetValue(prefix, out var opts))
-        //        foreach (var opt in opts)
-        //            Items.Add(opt);
-        //}
-        //else
-        //{
-        //    // Command clicked: inject it into the TextBox
-        //    CommandText = $"{_currentPrefix?.ToString().ToLowerInvariant()} {value}";
-        //    ResetItems();
-        //}
-    }
-
-    public void ResetItems()
+    public IEnumerable<string> GetPrefixes()
+        => Enum.GetNames<CommandPrefix>()
+               .Select(name => name.ToLowerInvariant());
+    public void PopulateItems(IEnumerable<string> values)
     {
         Items.Clear();
-        foreach (var name in Enum.GetNames<CommandPrefix>())
-            Items.Add(name.ToLowerInvariant());
+        foreach (var v in values) Items.Add(v);
+    }
+
+    public void Reset()
+    {
+        CommandText = string.Empty;
+        ErrorMessage = null;
+        ExecuteReady = false;
+        CurrentPrefix = null;
+        PopulateItems(GetPrefixes());
     }
 }

@@ -36,9 +36,9 @@
     </Window.Resources>
 
     <Window.KeyBindings>
-        <KeyBinding Command="{Binding LaunchCommand}" Gesture="Enter" />
-        <KeyBinding Command="{Binding MoveDownCommand}" Gesture="Down" />
-        <KeyBinding Command="{Binding MoveUpCommand}" Gesture="Up" />
+        <KeyBinding Command="{Binding OnEnterCommand}" Gesture="Enter" />
+        <KeyBinding Command="{Binding OnMoveDownCommand}" Gesture="Down" />
+        <KeyBinding Command="{Binding OnMoveUpCommand}" Gesture="Up" />
     </Window.KeyBindings>
 
     <Border
@@ -86,7 +86,7 @@
                 FontSize="13"
                 Foreground="#E0F0FF"
                 MaxLength="25"
-                Text="{Binding CommandText, Mode=TwoWay}"
+                Text="{Binding CommandText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                 Watermark="Type a command…" />
 
             <TextBlock

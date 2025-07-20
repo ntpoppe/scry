@@ -1,6 +1,6 @@
 using Avalonia.Controls;
 using Avalonia.Input;
-using Avalonia.Interactivity;
+using Avalonia.Threading;
 using Scry.ViewModels;
 
 namespace Scry.Views;
@@ -12,15 +12,19 @@ public partial class ScryWindow : Window
         InitializeComponent();
         DataContext = new ScryWindowViewModel();
 
-        CommandTextBox.LostFocus += CommandTextBox_LostFocus;
+        CommandTextBox.TextChanged += CommandTextBox_TextChanged;
     }
 
-    private void CommandTextBox_LostFocus(object? sender, RoutedEventArgs e)
+    private void CommandTextBox_TextChanged(object? sender, TextChangedEventArgs e)
     {
-        if (DataContext is ScryWindowViewModel vm)
-            vm.CommandText = string.Empty;
-
-        CommandTextBox.Clear();
+        // Post to UI thread after layout so the new text is already in place
+        Dispatcher.UIThread.Post(() =>
+        {
+            var len = CommandTextBox.Text?.Length ?? 0;
+            CommandTextBox.CaretIndex = len;
+            CommandTextBox.SelectionStart = len;
+            CommandTextBox.SelectionEnd = len;
+        }, DispatcherPriority.Background);
     }
 
     private void OnKeyDown(object? sender, KeyEventArgs e)
@@ -37,26 +41,14 @@ public partial class ScryWindow : Window
 
     public override void Show()
     {
-        if (DataContext is ScryWindowViewModel vm)
-            ResetText(vm);
-
+        (DataContext as ScryWindowViewModel)?.Reset();
         base.Show();
         CommandTextBox.Focus();
     }
 
     public override void Hide()
     {
-        if (DataContext is ScryWindowViewModel vm)
-            ResetText(vm);
-
+        (DataContext as ScryWindowViewModel)?.Reset();
         base.Hide();
-    }
-
-    private void ResetText(ScryWindowViewModel vm)
-    {
-        vm.CommandText = string.Empty;
-        vm.ErrorMessage = null;
-        vm.ResetItems();
-        CommandTextBox.Clear();
     }
 }
