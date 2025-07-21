@@ -117,6 +117,16 @@ public partial class ScryWindowViewModel : ViewModelBase
         if (_suppressChange) return;
         ErrorMessage = null;
 
+        // If we had a prefix but the text no longer starts with it, reset
+        if (CurrentPrefix is not null)
+        {
+            var expectedStart = CurrentPrefix.Value.ToString().ToLowerInvariant() + " ";
+            if (!value.StartsWith(expectedStart, StringComparison.OrdinalIgnoreCase))
+            {
+                CurrentPrefix = null;
+            }
+        }
+
         var trimmed = value.TrimEnd();
         var parts = trimmed.Split(new[] { ' ' }, 2, StringSplitOptions.RemoveEmptyEntries);
 
