@@ -1,60 +1,54 @@
 ﻿using Scry.Models;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 
 namespace Scry.Services;
-
-public class ProcessExecutor : IProcessExecutor
+public class ProcessExecutor
 {
-    private List<string> _validPrefixes = new()
+    private readonly Dictionary<string, ICommandHandler> _handlers;
+
+    public ProcessExecutor()
     {
-        "run"
-    };
+        var list = new List<ICommandHandler>
+        {
+            new RunHandler(),
+            new WebHandler(),
+            new ScriptHandler(),
+            new InstalledAppHandler()
+        };
+        _handlers = list.ToDictionary(h => h.Prefix, StringComparer.OrdinalIgnoreCase);
+    }
+
+    public IEnumerable<string> ValidPrefixes => _handlers.Keys;
+
+    public bool TryGetHandler(string prefix, [NotNullWhen(true)] out ICommandHandler? handler)
+        => _handlers.TryGetValue(prefix, out handler);
+
+    public IEnumerable<string> GetOptions(string prefix)
+    {
+        if (_handlers.TryGetValue(prefix, out var h))
+            return h.GetOptions();
+        return Array.Empty<string>();
+    }
 
     public ExecuteResult Execute(string command)
     {
         if (string.IsNullOrWhiteSpace(command))
             return new ExecuteResult(false, "Empty command");
 
-        var parts = command.TrimEnd().Split(' ', 2, StringSplitOptions.RemoveEmptyEntries);
+        var parts = command.Split(' ', 2, StringSplitOptions.RemoveEmptyEntries);
         if (parts.Length != 2)
-            return new ExecuteResult(false, "Invalid part length");
+            return new ExecuteResult(false, "Must be `<prefix> <key>`");
 
-        var prefix = parts[0].ToLowerInvariant();
-        var key = parts[1].ToLowerInvariant();
+        var prefix = parts[0];
+        var key = parts[1];
 
-        if (!_validPrefixes.Contains(prefix))
-            return new ExecuteResult(false, "Invalid prefix");
+        if (!_handlers.TryGetValue(prefix, out var handler))
+            return new ExecuteResult(false, $"Unknown prefix: {prefix}");
 
-        switch (prefix)
-        {
-            case "run":
-                return HandleRun(key);
-            default:
-                throw new InvalidOperationException("invalid prefix");
-        }
-    }
-
-    private ExecuteResult HandleRun(string key)
-    {
-        var path = key switch
-        {
-            "notepad" => "notepad.exe",
-            _ => null
-        };
-
-        if (path is null)
-            return new ExecuteResult(false, "Path not found");
-
-        try
-        {
-            Process.Start(new ProcessStartInfo(path) { UseShellExecute = true });
-            return new ExecuteResult(true);
-        }
-        catch (Exception ex)
-        {
-            return new ExecuteResult(false, ex.Message);
-        }
+        return handler.Execute(key);
     }
 }
+
