@@ -3,7 +3,6 @@ using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Data.Core.Plugins;
 using Avalonia.Markup.Xaml;
 using Scry.Services;
-using Scry.ViewModels;
 using Scry.Views;
 using System;
 using System.Linq;
@@ -27,7 +26,6 @@ public partial class App : Application
 
             var window = new ScryWindow
             {
-                DataContext = new ScryWindowViewModel(),
                 ShowInTaskbar = false
             };
 
@@ -44,10 +42,10 @@ public partial class App : Application
             window.Opened += onFirstOpen;
 
             // Hide window on unfocus
-            window.Deactivated += (s, e) =>
-            {
-                window.Hide();
-            };
+            //window.Deactivated += (s, e) =>
+            //{
+            //    window.Hide();
+            //};
 
             GlobalHotkey.Register(() => Toggle(window, desktop));
 

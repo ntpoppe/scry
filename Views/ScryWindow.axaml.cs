@@ -1,5 +1,4 @@
 using Avalonia.Controls;
-using Avalonia.Input;
 using Avalonia.Threading;
 using Scry.ViewModels;
 
@@ -10,38 +9,18 @@ public partial class ScryWindow : Window
     public ScryWindow()
     {
         InitializeComponent();
-        DataContext = new ScryWindowViewModel();
+        var vm = new ScryWindowViewModel();
+        DataContext = vm;
 
-        CommandTextBox.TextChanged += CommandTextBox_TextChanged;
-    }
-
-    private void CommandTextBox_TextChanged(object? sender, TextChangedEventArgs e)
-    {
-        // Post to UI thread after layout so the new text is already in place
-        Dispatcher.UIThread.Post(() =>
-        {
-            var len = CommandTextBox.Text?.Length ?? 0;
-            CommandTextBox.CaretIndex = len;
-            CommandTextBox.SelectionStart = len;
-            CommandTextBox.SelectionEnd = len;
-        }, DispatcherPriority.Background);
-    }
-
-    private void OnKeyDown(object? sender, KeyEventArgs e)
-    {
-        if (e.Key != Key.Escape)
-        {
-            base.OnKeyDown(e);
-            return;
-        }
-
-        Hide();
-        e.Handled = true;
+        vm.CaretMoveRequested += (_, _) => MoveCaretToEnd();
+        vm.CancelRequested += (_, _) => Hide();
     }
 
     public override void Show()
     {
-        (DataContext as ScryWindowViewModel)?.Reset();
+        var vm = DataContext as ScryWindowViewModel;
+        vm?.Reset();
+        vm?.MoveDownCommand?.Execute(null);
         base.Show();
         CommandTextBox.Focus();
     }
@@ -50,5 +29,16 @@ public partial class ScryWindow : Window
     {
         (DataContext as ScryWindowViewModel)?.Reset();
         base.Hide();
+    }
+
+    private void MoveCaretToEnd()
+    {
+        Dispatcher.UIThread.Post(() =>
+        {
+            var len = CommandTextBox.Text?.Length ?? 0;
+            CommandTextBox.CaretIndex = len;
+            CommandTextBox.SelectionStart = len;
+            CommandTextBox.SelectionEnd = len;
+        }, DispatcherPriority.Background);
     }
 }

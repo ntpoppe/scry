@@ -29,11 +29,17 @@ public partial class ScryWindowViewModel : ViewModelBase
     [ObservableProperty]
     private CommandPrefix? _currentPrefix;
 
+    public IRelayCommand CancelCommand { get; }
     public IRelayCommand EnterCommand { get; }
+    public IRelayCommand TabCommand { get; }
     public IRelayCommand MoveDownCommand { get; }
     public IRelayCommand MoveUpCommand { get; }
 
+    public event EventHandler? CancelRequested;
+    public event EventHandler? CaretMoveRequested;
+
     private readonly IProcessExecutor _executor;
+    private bool _suppressChange;
 
     // Collection bound to ListBox, starts with prefixes then moves to executables
     public ObservableCollection<string> Items { get; } = new();
@@ -52,24 +58,30 @@ public partial class ScryWindowViewModel : ViewModelBase
     public ScryWindowViewModel(IProcessExecutor executor)
     {
         _executor = executor;
+
         EnterCommand = new RelayCommand(EnterPressed);
+        TabCommand = new RelayCommand(TabPressed);
         MoveUpCommand = new RelayCommand(MoveUp);
         MoveDownCommand = new RelayCommand(MoveDown);
+        CancelCommand = new RelayCommand(Cancel);
+
         PopulateItems(GetPrefixes());
     }
 
     private void EnterPressed()
     {
-        if (TryExecute()) return;
-        if (SetPrefix()) return;
-        ChooseCommand();
+        if (!ExecuteReady)
+        {
+            ErrorMessage = "Invalid command";
+            return;
+        }
+        Execute();
     }
 
-    private bool TryExecute()
+    private void TabPressed()
     {
-        if (!ExecuteReady) return false;
-        Execute();
-        return true;
+        if (SetPrefix()) return;
+        ChooseCommand();
     }
 
     private bool SetPrefix()
@@ -78,6 +90,7 @@ public partial class ScryWindowViewModel : ViewModelBase
         {
             CurrentPrefix = prefix;
             CommandText = prefix.ToString().ToLowerInvariant();
+            CaretMoveRequested?.Invoke(this, EventArgs.Empty);
 
             if (_optionsMap.TryGetValue(prefix, out var opts))
                 PopulateItems(opts);
@@ -91,9 +104,80 @@ public partial class ScryWindowViewModel : ViewModelBase
 
     private void ChooseCommand()
     {
+        if (ExecuteReady) return;
+
         CommandText = $"{CurrentPrefix?.ToString().ToLowerInvariant()} {SelectedItem}";
+        CaretMoveRequested?.Invoke(this, EventArgs.Empty);
         Items.Clear();
         ExecuteReady = true;
+    }
+
+    partial void OnCommandTextChanged(string value)
+    {
+        if (_suppressChange) return;
+        ErrorMessage = null;
+
+        var trimmed = value.TrimEnd();
+        var parts = trimmed.Split(new[] { ' ' }, 2, StringSplitOptions.RemoveEmptyEntries);
+
+        ExecuteReady = CheckIfExecutable(parts);
+
+        // If we already have a prefix, filter commands  
+        if (CurrentPrefix is not null)
+        {
+            var remainder = parts.Length > 1 ? parts[1] : string.Empty;
+            var options = _optionsMap[CurrentPrefix.Value];
+
+            PopulateItems(
+                options.Where(o => o.StartsWith(remainder, StringComparison.OrdinalIgnoreCase))
+            );
+            MoveDown();
+            return;
+        }
+
+        // No prefix yet -> have we typed one exactly?  
+        if (parts.Length == 1)
+        {
+            var candidate = parts[0];
+            // do we have a prefix whose name == candidate?  
+            if (Enum.TryParse<CommandPrefix>(candidate, true, out var pfx))
+            {
+                // user has finished typing the prefix  
+                CurrentPrefix = pfx;
+
+                // include the trailing space in CommandText so they can start the next word  
+                _suppressChange = true;
+                CommandText = pfx.ToString().ToLowerInvariant() + " ";
+                _suppressChange = false;
+
+                CaretMoveRequested?.Invoke(this, EventArgs.Empty);
+
+                // show that prefix's options  
+                PopulateItems(_optionsMap[pfx]!);
+                SelectedIndex = Items.Count > 0 ? 0 : -1;
+                return;
+            }
+        }
+
+        // Still typing a prefix -> live‐filter on what they've entered so far  
+        var filter = parts.Length >= 1 ? parts[0] : string.Empty;
+        PopulateItems(
+            GetPrefixes()
+              .Where(p => p.StartsWith(filter, StringComparison.OrdinalIgnoreCase))
+        );
+
+        MoveDown();
+    }
+
+    private bool CheckIfExecutable(string[] parts)
+    {
+        if (parts.Length < 2 || CurrentPrefix is null)
+            return false;
+
+        if (_optionsMap.TryGetValue(CurrentPrefix.Value, out var opts))
+            return opts.Any(o => o.Equals(parts[1].Trim(), StringComparison.OrdinalIgnoreCase));
+
+        return false;
     }
 
     private void Execute()
@@ -108,6 +192,7 @@ public partial class ScryWindowViewModel : ViewModelBase
         CommandText = string.Empty;
         ErrorMessage = null;
         ExecuteReady = false;
+        Cancel();
     }
 
     private void MoveUp()
@@ -139,4 +224,8 @@ public partial class ScryWindowViewModel : ViewModelBase
         CurrentPrefix = null;
         PopulateItems(GetPrefixes());
     }
+
+    public void Cancel()
+        => CancelRequested?.Invoke(this, EventArgs.Empty);
+
 }

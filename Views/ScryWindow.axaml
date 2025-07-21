@@ -18,7 +18,6 @@
     ExtendClientAreaChromeHints="NoChrome"
     ExtendClientAreaToDecorationsHint="True"
     Icon="/Assets/avalonia-logo.ico"
-    KeyDown="OnKeyDown"
     Opacity="0.95"
     ShowInTaskbar="True"
     SystemDecorations="None"
@@ -36,9 +35,11 @@
     </Window.Resources>
 
     <Window.KeyBindings>
-        <KeyBinding Command="{Binding OnEnterCommand}" Gesture="Enter" />
-        <KeyBinding Command="{Binding OnMoveDownCommand}" Gesture="Down" />
-        <KeyBinding Command="{Binding OnMoveUpCommand}" Gesture="Up" />
+        <KeyBinding Command="{Binding EnterCommand}" Gesture="Enter" />
+        <KeyBinding Command="{Binding CancelCommand}" Gesture="Escape" />
+        <KeyBinding Command="{Binding TabCommand}" Gesture="Tab" />
+        <KeyBinding Command="{Binding MoveDownCommand}" Gesture="Down" />
+        <KeyBinding Command="{Binding MoveUpCommand}" Gesture="Up" />
     </Window.KeyBindings>
 
     <Border
@@ -87,7 +88,8 @@
                 Foreground="#E0F0FF"
                 MaxLength="25"
                 Text="{Binding CommandText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                Watermark="Type a command…" />
+                Watermark="Type a command…">
+            </TextBox>
 
             <TextBlock
                 Grid.Row="2"
@@ -108,11 +110,11 @@
                 FontSize="13"
                 Foreground="#E0F0FF"
                 ItemsSource="{Binding Items}"
-                SelectedItem="{Binding SelectedItem}"
-				SelectedIndex="{Binding SelectedIndex}">
+                SelectedIndex="{Binding SelectedIndex}"
+                SelectedItem="{Binding SelectedItem}">
                 <ListBox.ItemTemplate>
                     <DataTemplate>
-						<TextBlock Text="{Binding .}" Padding="4"/>
+                        <TextBlock Padding="4" Text="{Binding .}" />
                     </DataTemplate>
                 </ListBox.ItemTemplate>
             </ListBox>
