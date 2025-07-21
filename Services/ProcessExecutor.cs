@@ -13,10 +13,10 @@ public class ProcessExecutor
     {
         var list = new List<ICommandHandler>
         {
+            new InstalledAppHandler(),
             new RunHandler(),
             new WebHandler(),
-            new ScriptHandler(),
-            new InstalledAppHandler()
+            new ScriptHandler()
         };
         _handlers = list.ToDictionary(h => h.Prefix, StringComparer.OrdinalIgnoreCase);
     }
