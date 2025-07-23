@@ -49,8 +49,8 @@
         <!--  decorative gradient + transparency  -->
         <Border.Background>
             <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
-                <GradientStop Offset="0.0" Color="#CC1E1A2E" />
-                <GradientStop Offset="1.0" Color="#CC5F4D7B" />
+                <GradientStop Offset="0.0" Color="#FF1A1F24" />
+                <GradientStop Offset="1.0" Color="#FF0F1216" />
             </LinearGradientBrush>
         </Border.Background>
 
@@ -63,14 +63,14 @@
         </Border.Effect>
 
         <Grid RowDefinitions="Auto,Auto,Auto,*">
-            <!--  Branding header  -->
+            <!--  Header  -->
             <TextBlock
                 Grid.Row="0"
                 Margin="0,0,0,6"
                 HorizontalAlignment="Center"
                 FontSize="20"
                 FontWeight="Bold"
-                Foreground="#E0F0FF"
+                Foreground="#FF1ABC9C"
                 Text="Scry" />
 
             <!--  Command input  -->
@@ -80,22 +80,21 @@
                 Height="26"
                 Padding="6,0"
                 VerticalContentAlignment="Center"
-                Background="#55262738"
-                BorderBrush="#5564576B"
+                Background="#FF2F3642"
+                BorderBrush="#FF3D4A5B"
                 BorderThickness="1"
                 CornerRadius="4"
                 FontSize="13"
-                Foreground="#E0F0FF"
+                Foreground="#FFECF0F1"
                 MaxLength="25"
                 Text="{Binding CommandText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                Watermark="Type a command…">
-            </TextBox>
+                Watermark="Type a command…" />
 
             <TextBlock
                 Grid.Row="2"
                 Margin="0,8,0,0"
                 VerticalAlignment="Center"
-                Foreground="Tomato"
+                Foreground="#FFE74C3C"
                 IsVisible="{Binding ErrorMessage, Converter={StaticResource NullToBool}}"
                 Text="{Binding ErrorMessage}"
                 TextAlignment="Center" />
@@ -108,7 +107,7 @@
                 Background="Transparent"
                 BorderThickness="0"
                 FontSize="13"
-                Foreground="#E0F0FF"
+                Foreground="#FFECF0F1"
                 ItemsSource="{Binding Items}"
                 SelectedIndex="{Binding SelectedIndex}"
                 SelectedItem="{Binding SelectedItem}">
