@@ -21,16 +21,18 @@ public class ProcessExecutor
         _handlers = list.ToDictionary(h => h.Prefix, StringComparer.OrdinalIgnoreCase);
     }
 
-    public IEnumerable<string> ValidPrefixes => _handlers.Keys;
+    public IEnumerable<ListEntry> ListEntries
+        => _handlers.Values
+                .Select(h => new ListEntry(h.Prefix, h.Description));
 
     public bool TryGetHandler(string prefix, [NotNullWhen(true)] out ICommandHandler? handler)
         => _handlers.TryGetValue(prefix, out handler);
 
-    public IEnumerable<string> GetOptions(string prefix)
+    public IEnumerable<ListEntry> GetOptions(string prefix)
     {
         if (_handlers.TryGetValue(prefix, out var h))
             return h.GetOptions();
-        return Array.Empty<string>();
+        return Array.Empty<ListEntry>();
     }
 
     public ExecuteResult Execute(string command)

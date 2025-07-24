@@ -2,12 +2,14 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 
 namespace Scry.Services;
 
 public class WebHandler : ICommandHandler
 {
     public string Prefix => "web";
+    public string Description => "placeholder";
 
     private readonly Dictionary<string, string> _map = new()
     {
@@ -36,7 +38,10 @@ public class WebHandler : ICommandHandler
         ["twitter"] = "https://www.x.com"
     };
 
-    public IEnumerable<string> GetOptions() => _map.Keys;
+    public IEnumerable<ListEntry> GetOptions()
+        => _map
+           .DistinctBy(kvp => kvp.Key, StringComparer.OrdinalIgnoreCase)
+           .Select(kvp => new ListEntry(kvp.Key, null));
 
     public ExecuteResult Execute(string key)
     {

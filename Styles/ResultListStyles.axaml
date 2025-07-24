@@ -40,4 +40,20 @@
         <Setter Property="Background" Value="#FF16A085" />
         <Setter Property="Foreground" Value="White" />
     </Style>
+
+    <Style Selector="ListBox.ResultList > ListBoxItem TextBlock.PrimaryText">
+        <Setter Property="Foreground" Value="{DynamicResource PrimaryColor}" />
+    </Style>
+
+    <Style Selector="ListBox.ResultList > ListBoxItem TextBlock.SecondaryText">
+        <Setter Property="Foreground" Value="Gray" />
+    </Style>
+
+    <Style Selector="ListBox.ResultList > ListBoxItem:selected TextBlock.PrimaryText">
+        <Setter Property="Foreground" Value="White" />
+    </Style>
+
+    <Style Selector="ListBox.ResultList > ListBoxItem:selected TextBlock.SecondaryText">
+        <Setter Property="Foreground" Value="White" />
+    </Style>
 </Styles>

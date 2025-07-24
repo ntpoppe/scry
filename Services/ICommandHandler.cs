@@ -11,9 +11,14 @@ public interface ICommandHandler
     string Prefix { get; }
 
     /// <summary>
+    /// The description of the handler.
+    /// </summary>
+    string Description { get; }
+
+    /// <summary>
     /// All the things this handler can run (for filtering/autocomplete).
     /// </summary>
-    IEnumerable<string> GetOptions();
+    IEnumerable<ListEntry> GetOptions();
 
     /// <summary>
     /// Execute the given key (which must be one of GetOptions()).

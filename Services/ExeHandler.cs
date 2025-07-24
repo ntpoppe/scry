@@ -10,8 +10,9 @@ namespace Scry.Services;
 public class ExeHandler : ICommandHandler
 {
     public string Prefix => "exe";
+    public string Description => ".exes found in PATH";
 
-    private Lazy<List<string>> _executables = new(() =>
+    private Lazy<List<ListEntry>> _executables = new(() =>
     {
         var paths = (Environment.GetEnvironmentVariable("PATH") ?? "")
                     .Split(Path.PathSeparator, StringSplitOptions.RemoveEmptyEntries);
@@ -19,22 +20,26 @@ public class ExeHandler : ICommandHandler
             .Where(Directory.Exists)
             .SelectMany(dir => Directory.EnumerateFiles(dir, "*.exe"))
             .Select(Path.GetFileNameWithoutExtension)
-            .Where(name => name is not null)
-            .Select(name => name!)
+            .Where(name => !string.IsNullOrEmpty(name))
             .Distinct(StringComparer.OrdinalIgnoreCase)
+            .Select(name => new ListEntry(name!, null))
             .ToList();
     });
 
-    public IEnumerable<string> GetOptions() => _executables.Value;
+    public IEnumerable<ListEntry> GetOptions() => _executables.Value;
 
     public ExecuteResult Execute(string key)
     {
-        if (!_executables.Value.Contains(key, StringComparer.OrdinalIgnoreCase))
+        var match = _executables.Value
+            .FirstOrDefault(e =>
+                string.Equals(e.Value, key, StringComparison.OrdinalIgnoreCase));
+
+        if (match is null)
             return new ExecuteResult(false, $"Unknown executable: {key}");
 
         try
         {
-            Process.Start(new ProcessStartInfo(key + ".exe") { UseShellExecute = true });
+            Process.Start(new ProcessStartInfo(match.Value) { UseShellExecute = true });
             return new ExecuteResult(true);
         }
         catch (Exception ex)

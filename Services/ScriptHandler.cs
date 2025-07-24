@@ -10,20 +10,22 @@ namespace Scry.Services;
 public class ScriptHandler : ICommandHandler
 {
     public string Prefix => "script";
+    public string Description => "placeholder";
 
     private readonly string _scriptsFolder =
         Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "ScryScripts");
 
-    public IEnumerable<string> GetOptions()
+    public IEnumerable<ListEntry> GetOptions()
     {
         if (!Directory.Exists(_scriptsFolder))
-            return Array.Empty<string>();
+            return Array.Empty<ListEntry>();
 
         return Directory
             .EnumerateFiles(_scriptsFolder)
             .Select(Path.GetFileNameWithoutExtension)
-            .Where(name => name is not null)
-            .Select(name => name!);
+            .Where(name => !string.IsNullOrEmpty(name))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .Select(name => new ListEntry(name!, null));
     }
 
     public ExecuteResult Execute(string key)

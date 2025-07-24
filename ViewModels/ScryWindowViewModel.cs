@@ -1,5 +1,6 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Scry.Models;
 using Scry.Services;
 using System;
 using System.Collections.Generic;
@@ -20,7 +21,7 @@ public partial class ScryWindowViewModel : ViewModelBase
     private string _commandText = string.Empty;
 
     [ObservableProperty]
-    private string? _selectedItem = null;
+    private ListEntry? _selectedItem = null;
 
     [ObservableProperty]
     private int _selectedIndex;
@@ -43,7 +44,7 @@ public partial class ScryWindowViewModel : ViewModelBase
     public IRelayCommand MoveDownCommand { get; }
     public IRelayCommand MoveUpCommand { get; }
 
-    public ObservableCollection<string> Items { get; } = new();
+    public ObservableCollection<ListEntry> Items { get; } = new();
 
     public ScryWindowViewModel() : this(new ProcessExecutor()) { }
 
@@ -57,7 +58,7 @@ public partial class ScryWindowViewModel : ViewModelBase
         MoveDownCommand = new RelayCommand(MoveDown);
         CancelCommand = new RelayCommand(Cancel);
 
-        PopulateItems(GetPrefixes());
+        PopulateItems(GetListEntries());
     }
 
     partial void OnCommandTextChanged(string value)
@@ -88,7 +89,7 @@ public partial class ScryWindowViewModel : ViewModelBase
 
             PopulateItems(
                 commands
-                    .Where(cmd => cmd.StartsWith(remainder, StringComparison.OrdinalIgnoreCase))
+                    .Where(cmd => cmd.Value.StartsWith(remainder, StringComparison.OrdinalIgnoreCase))
             );
 
             MoveDown();
@@ -125,8 +126,8 @@ public partial class ScryWindowViewModel : ViewModelBase
         // still typing a prefix -> live‐filter on what they've entered so far  
         var filter = parts.Length >= 1 ? parts[0] : string.Empty;
         PopulateItems(
-            GetPrefixes()
-              .Where(p => p.StartsWith(filter, StringComparison.OrdinalIgnoreCase))
+            GetListEntries()
+              .Where(p => p.Value.StartsWith(filter, StringComparison.OrdinalIgnoreCase))
         );
 
         MoveDown();
@@ -144,7 +145,7 @@ public partial class ScryWindowViewModel : ViewModelBase
         // no handler yet -> pick the handler name
         if (CurrentHandler == null && SelectedItem != null)
         {
-            CommandText = $"{SelectedItem}";
+            CommandText = $"{SelectedItem.Value}";
             CaretMoveRequested?.Invoke(this, EventArgs.Empty);
             return;
         }
@@ -152,7 +153,7 @@ public partial class ScryWindowViewModel : ViewModelBase
         // have a handler + a selection -> build “prefix argument” and run
         if (CurrentHandler != null && SelectedItem != null)
         {
-            CommandText = $"{CurrentHandler.Prefix} {SelectedItem}";
+            CommandText = $"{CurrentHandler.Prefix} {SelectedItem.Value}";
             Execute();
             return;
         }
@@ -171,7 +172,7 @@ public partial class ScryWindowViewModel : ViewModelBase
         // if we don’t yet have a handler selected, and the SelectedItem is one of our prefixes…
         if (CurrentHandler == null
             && SelectedItem is not null
-            && _executor.TryGetHandler(SelectedItem.ToLowerInvariant(), out var handler))
+            && _executor.TryGetHandler(SelectedItem.Value.ToLowerInvariant(), out var handler))
         {
             CurrentHandler = handler;
 
@@ -195,7 +196,7 @@ public partial class ScryWindowViewModel : ViewModelBase
     {
         if (ExecuteReadyByExactMatch) return;
 
-        CommandText = $"{CurrentHandler?.Prefix} {SelectedItem}";
+        CommandText = $"{CurrentHandler?.Prefix} {SelectedItem?.Value}";
         CaretMoveRequested?.Invoke(this, EventArgs.Empty);
         Items.Clear();
         ExecuteReadyByExactMatch = true;
@@ -208,7 +209,7 @@ public partial class ScryWindowViewModel : ViewModelBase
 
         var prefixKey = CurrentHandler.Prefix;
         var opts = _executor.GetOptions(prefixKey);
-        return opts.Any(o => o.Equals(parts[1].Trim(), StringComparison.OrdinalIgnoreCase));
+        return opts.Any(o => o.Value.Equals(parts[1].Trim(), StringComparison.OrdinalIgnoreCase));
     }
 
     private void Execute()
@@ -238,10 +239,10 @@ public partial class ScryWindowViewModel : ViewModelBase
             SelectedIndex++;
     }
 
-    public IEnumerable<string> GetPrefixes()
-        => _executor.ValidPrefixes;
+    public IEnumerable<ListEntry> GetListEntries()
+        => _executor.ListEntries;
 
-    public void PopulateItems(IEnumerable<string> values)
+    public void PopulateItems(IEnumerable<ListEntry> values)
     {
         Items.Clear();
         foreach (var v in values) Items.Add(v);
@@ -252,7 +253,7 @@ public partial class ScryWindowViewModel : ViewModelBase
         ErrorMessage = null;
         ExecuteReadyByExactMatch = false;
         CurrentHandler = null;
-        PopulateItems(GetPrefixes());
+        PopulateItems(GetListEntries());
     }
 
     public void Cancel()

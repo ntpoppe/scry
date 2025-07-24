@@ -11,16 +11,17 @@ namespace Scry.Services;
 public class RunHandler : ICommandHandler
 {
     public string Prefix => "run";
+    public string Description => "start menu apps";
 
-    private List<string>? _cache;
+    private List<ListEntry>? _cache;
 
-    private static readonly string[] StartMenuPaths = new[]
+    private readonly string[] StartMenuPaths = new[]
     {
         Environment.GetFolderPath(Environment.SpecialFolder.StartMenu),
         Environment.GetFolderPath(Environment.SpecialFolder.CommonStartMenu)
     };
 
-    public IEnumerable<string> GetOptions()
+    public IEnumerable<ListEntry> GetOptions()
     {
         // If cached, return it directly
         if (_cache is not null)
@@ -28,16 +29,16 @@ public class RunHandler : ICommandHandler
 
         // Not Windows? nothing to do
         if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-            return Enumerable.Empty<string>();
+            return Enumerable.Empty<ListEntry>();
 
         // Try to get the WSH COM type
         var shellType = Type.GetTypeFromProgID("WScript.Shell");
         if (shellType == null)
-            return Enumerable.Empty<string>();
+            return Enumerable.Empty<ListEntry>();
 
         dynamic? shell = Activator.CreateInstance(shellType);
         if (shell == null)
-            return Enumerable.Empty<string>();
+            return Enumerable.Empty<ListEntry>();
 
         // Enumerate shortcuts once
         var names = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
@@ -57,7 +58,7 @@ public class RunHandler : ICommandHandler
         }
 
         // Cache and return
-        _cache = names.OrderBy(n => n).ToList();
+        _cache = names.OrderBy(n => n).Select(n => new ListEntry(n, null)).ToList();
         return _cache;
     }
 
