@@ -10,6 +10,12 @@ namespace Scry.ViewModels;
 
 public partial class ScryWindowViewModel : ViewModelBase
 {
+    private readonly ProcessExecutor _executor;
+    private bool _suppressChange;
+
+    public event EventHandler? CancelRequested;
+    public event EventHandler? CaretMoveRequested;
+
     [ObservableProperty]
     private string _commandText = string.Empty;
 
@@ -23,16 +29,13 @@ public partial class ScryWindowViewModel : ViewModelBase
     private string? _errorMessage;
 
     [ObservableProperty]
-    private bool _executeReady;
+    private bool _executeReadyByExactMatch;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(ActivePhase))]
     private ICommandHandler? _currentHandler;
 
-    public string ActivePhase
-        => CurrentHandler == null
-             ? "action"
-             : "argument";
+    public string ActivePhase => CurrentHandler == null ? "action" : "argument";
 
     public IRelayCommand CancelCommand { get; }
     public IRelayCommand EnterCommand { get; }
@@ -40,13 +43,6 @@ public partial class ScryWindowViewModel : ViewModelBase
     public IRelayCommand MoveDownCommand { get; }
     public IRelayCommand MoveUpCommand { get; }
 
-    public event EventHandler? CancelRequested;
-    public event EventHandler? CaretMoveRequested;
-
-    private readonly ProcessExecutor _executor;
-    private bool _suppressChange;
-
-    // Collection bound to ListBox, starts with prefixes then moves to executables
     public ObservableCollection<string> Items { get; } = new();
 
     public ScryWindowViewModel() : this(new ProcessExecutor()) { }
@@ -64,63 +60,12 @@ public partial class ScryWindowViewModel : ViewModelBase
         PopulateItems(GetPrefixes());
     }
 
-    private void EnterPressed()
-    {
-        if (!ExecuteReady)
-        {
-            ErrorMessage = "Invalid command";
-            return;
-        }
-        Execute();
-    }
-
-    private void TabPressed()
-    {
-        if (SetPrefix()) return;
-        ChooseCommand();
-    }
-
-    private bool SetPrefix()
-    {
-        // If we don’t yet have a handler selected, and the SelectedItem is one of our prefixes…
-        if (CurrentHandler == null
-            && SelectedItem is not null
-            && _executor.TryGetHandler(SelectedItem.ToLowerInvariant(), out var handler))
-        {
-            CurrentHandler = handler;
-
-            _suppressChange = true;
-            CommandText = handler.Prefix + " ";
-            _suppressChange = false;
-
-            CaretMoveRequested?.Invoke(this, EventArgs.Empty);
-
-            // 3) load that handler’s options
-            PopulateItems(handler.GetOptions());
-            SelectedIndex = Items.Any() ? 0 : -1;
-
-            return true;
-        }
-
-        return false;
-    }
-
-    private void ChooseCommand()
-    {
-        if (ExecuteReady) return;
-
-        CommandText = $"{CurrentHandler?.Prefix} {SelectedItem}";
-        CaretMoveRequested?.Invoke(this, EventArgs.Empty);
-        Items.Clear();
-        ExecuteReady = true;
-    }
-
     partial void OnCommandTextChanged(string value)
     {
         if (_suppressChange) return;
         ErrorMessage = null;
 
-        // If we had a prefix but the text no longer starts with it, reset
+        // if we had a prefix but the text no longer starts with it, reset
         if (CurrentHandler is not null)
         {
             var expectedStart = CurrentHandler.Prefix + " ";
@@ -132,9 +77,9 @@ public partial class ScryWindowViewModel : ViewModelBase
 
         var parts = value.Split(new[] { ' ' }, 2, StringSplitOptions.None);
 
-        ExecuteReady = CheckIfExecutable(parts);
+        ExecuteReadyByExactMatch = CheckIfExecutable(parts);
 
-        // If we already have a prefix, filter commands  
+        // if we already have a prefix, filter commands  
         if (CurrentHandler is not null)
         {
             var remainder = parts.Length > 1 ? parts[1] : string.Empty;
@@ -150,7 +95,7 @@ public partial class ScryWindowViewModel : ViewModelBase
             return;
         }
 
-        // No prefix yet -> have we typed one exactly?  
+        // no prefix yet -> have we typed one exactly?  
         if (parts.Length == 1)
         {
             var candidate = parts[0];
@@ -177,7 +122,7 @@ public partial class ScryWindowViewModel : ViewModelBase
             }
         }
 
-        // Still typing a prefix -> live‐filter on what they've entered so far  
+        // still typing a prefix -> live‐filter on what they've entered so far  
         var filter = parts.Length >= 1 ? parts[0] : string.Empty;
         PopulateItems(
             GetPrefixes()
@@ -185,6 +130,75 @@ public partial class ScryWindowViewModel : ViewModelBase
         );
 
         MoveDown();
+    }
+
+    private void EnterPressed()
+    {
+        // fully-typed commands
+        if (ExecuteReadyByExactMatch)
+        {
+            Execute();
+            return;
+        }
+
+        // no handler yet -> pick the handler name
+        if (CurrentHandler == null && SelectedItem != null)
+        {
+            CommandText = $"{SelectedItem}";
+            CaretMoveRequested?.Invoke(this, EventArgs.Empty);
+            return;
+        }
+
+        // have a handler + a selection -> build “prefix argument” and run
+        if (CurrentHandler != null && SelectedItem != null)
+        {
+            CommandText = $"{CurrentHandler.Prefix} {SelectedItem}";
+            Execute();
+            return;
+        }
+
+        ErrorMessage = "Invalid command";
+    }
+
+    private void TabPressed()
+    {
+        if (SetPrefix()) return;
+        ChooseCommand();
+    }
+
+    private bool SetPrefix()
+    {
+        // if we don’t yet have a handler selected, and the SelectedItem is one of our prefixes…
+        if (CurrentHandler == null
+            && SelectedItem is not null
+            && _executor.TryGetHandler(SelectedItem.ToLowerInvariant(), out var handler))
+        {
+            CurrentHandler = handler;
+
+            _suppressChange = true;
+            CommandText = handler.Prefix + " ";
+            _suppressChange = false;
+
+            CaretMoveRequested?.Invoke(this, EventArgs.Empty);
+
+            // load that handler’s options
+            PopulateItems(handler.GetOptions());
+            SelectedIndex = Items.Any() ? 0 : -1;
+
+            return true;
+        }
+
+        return false;
+    }
+
+    private void ChooseCommand()
+    {
+        if (ExecuteReadyByExactMatch) return;
+
+        CommandText = $"{CurrentHandler?.Prefix} {SelectedItem}";
+        CaretMoveRequested?.Invoke(this, EventArgs.Empty);
+        Items.Clear();
+        ExecuteReadyByExactMatch = true;
     }
 
     private bool CheckIfExecutable(string[] parts)
@@ -208,7 +222,7 @@ public partial class ScryWindowViewModel : ViewModelBase
 
         CommandText = string.Empty;
         ErrorMessage = null;
-        ExecuteReady = false;
+        ExecuteReadyByExactMatch = false;
         Cancel();
     }
 
@@ -232,17 +246,15 @@ public partial class ScryWindowViewModel : ViewModelBase
         Items.Clear();
         foreach (var v in values) Items.Add(v);
     }
-
     public void Reset()
     {
         CommandText = string.Empty;
         ErrorMessage = null;
-        ExecuteReady = false;
+        ExecuteReadyByExactMatch = false;
         CurrentHandler = null;
         PopulateItems(GetPrefixes());
     }
 
     public void Cancel()
         => CancelRequested?.Invoke(this, EventArgs.Empty);
-
 }
