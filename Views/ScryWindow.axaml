@@ -7,8 +7,8 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:vm="using:Scry.ViewModels"
     Title="Scry"
-    Width="480"
-    Height="240"
+    Width="800"
+    Height="450"
     Padding="0"
     d:DesignHeight="450"
     d:DesignWidth="800"
@@ -18,7 +18,7 @@
     ExtendClientAreaChromeHints="NoChrome"
     ExtendClientAreaToDecorationsHint="True"
     Icon="/Assets/avalonia-logo.ico"
-    Opacity="0.95"
+    Opacity="0.90"
     ShowInTaskbar="True"
     SystemDecorations="None"
     Topmost="True"
@@ -71,7 +71,7 @@
                 FontSize="20"
                 FontWeight="Bold"
                 Foreground="#FF1ABC9C"
-                Text="Scry" />
+                Text="scry" />
 
             <!--  Command input  -->
             <TextBox
@@ -80,18 +80,21 @@
                 Height="26"
                 Padding="6,0"
                 VerticalContentAlignment="Center"
-                Background="#FF2F3642"
-                BorderBrush="#FF3D4A5B"
                 BorderThickness="1"
+                Classes="CommandLine"
                 CornerRadius="4"
                 FontSize="13"
-                Foreground="#FFECF0F1"
+                KeyDown="CommandTextBox_KeyDown"
                 MaxLength="25"
                 Text="{Binding CommandText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                 Watermark="Type a command…" />
 
+            <Border Grid.Row="2" Classes="ActivePhase">
+                <TextBlock Classes="ActivePhase" Text="{Binding ActivePhase}" />
+            </Border>
+
             <TextBlock
-                Grid.Row="2"
+                Grid.Row="3"
                 Margin="0,8,0,0"
                 VerticalAlignment="Center"
                 Foreground="#FFE74C3C"
@@ -101,13 +104,9 @@
 
             <!--  Results fill remaining space  -->
             <ListBox
-                Name="ResultsList"
-                Grid.Row="3"
-                Margin="0,8,0,0"
-                Background="Transparent"
-                BorderThickness="0"
-                FontSize="13"
-                Foreground="#FFECF0F1"
+                Name="ResultList"
+                Classes="ResultList"
+                Grid.Row="4"
                 ItemsSource="{Binding Items}"
                 SelectedIndex="{Binding SelectedIndex}"
                 SelectedItem="{Binding SelectedItem}">

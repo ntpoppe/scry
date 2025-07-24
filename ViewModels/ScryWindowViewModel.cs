@@ -26,7 +26,13 @@ public partial class ScryWindowViewModel : ViewModelBase
     private bool _executeReady;
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(ActivePhase))]
     private ICommandHandler? _currentHandler;
+
+    public string ActivePhase
+        => CurrentHandler == null
+             ? "action"
+             : "argument";
 
     public IRelayCommand CancelCommand { get; }
     public IRelayCommand EnterCommand { get; }

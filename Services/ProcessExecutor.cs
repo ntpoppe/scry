@@ -13,8 +13,8 @@ public class ProcessExecutor
     {
         var list = new List<ICommandHandler>
         {
-            new InstalledAppHandler(),
             new RunHandler(),
+            new ExeHandler(),
             new WebHandler(),
             new ScriptHandler()
         };

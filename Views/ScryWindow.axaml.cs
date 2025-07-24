@@ -1,4 +1,5 @@
 using Avalonia.Controls;
+using Avalonia.Input;
 using Avalonia.Threading;
 using Scry.ViewModels;
 
@@ -16,6 +17,16 @@ public partial class ScryWindow : Window
         vm.CancelRequested += (_, _) => Hide();
     }
 
+    /// <summary> Used to ignore spaces if the command text is empty. Causes issues with parsing. </summary>
+    private void CommandTextBox_KeyDown(object? sender, KeyEventArgs e)
+    {
+        if (sender is TextBox tb
+            && string.IsNullOrEmpty(tb.Text)
+            && (e.Key == Key.Space || e.Key == Key.Tab))
+        {
+            e.Handled = true;
+        }
+    }
     public override void Show()
     {
         var vm = DataContext as ScryWindowViewModel;

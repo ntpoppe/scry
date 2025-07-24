@@ -25,93 +25,81 @@
     </TrayIcon.Icons>
 
     <Application.Styles>
-		<FluentTheme>
-			<FluentTheme.Palettes>
-				<!-- Light palette with teal accent -->
-				<ColorPaletteResources
-					x:Key="Light"
-					Accent="#FF1ABC9C"
+        <FluentTheme>
+            <FluentTheme.Palettes>
+                <!--  Light palette with teal accent  -->
+                <ColorPaletteResources
+                    x:Key="Light"
+                    Accent="#FF1ABC9C"
+                    AltHigh="White"
+                    AltLow="White"
+                    AltMedium="White"
+                    AltMediumHigh="White"
+                    AltMediumLow="White"
+                    BaseHigh="Black"
+                    BaseLow="#FFECF0F1"
+                    BaseMedium="#FFD1EDEE"
+                    BaseMediumHigh="#FFA0D5C3"
+                    BaseMediumLow="#FF80C5B8"
+                    ChromeAltLow="#FFA0D5C3"
+                    ChromeBlackHigh="Black"
+                    ChromeBlackLow="#FFECF0F1"
+                    ChromeBlackMedium="#FFA0D5C3"
+                    ChromeBlackMediumLow="#FFD1EDEE"
+                    ChromeDisabledHigh="#FFECF0F1"
+                    ChromeDisabledLow="#FFA0D5C3"
+                    ChromeGray="#FF80C5B8"
+                    ChromeHigh="#FFECF0F1"
+                    ChromeLow="#FFF1FEF9"
+                    ChromeMedium="#FFE0F7EE"
+                    ChromeMediumLow="#FFF1FEF9"
+                    ChromeWhite="White"
+                    ListLow="#FFE0F7EE"
+                    ListMedium="#FFD1EDEE"
+                    RegionColor="#FFF1FEF9" />
 
-					AltHigh="White"
-					AltLow="White"
-					AltMedium="White"
-					AltMediumHigh="White"
-					AltMediumLow="White"
+                <!--  Dark palette with the same teal accent  -->
+                <ColorPaletteResources
+                    x:Key="Dark"
+                    Accent="#FF1ABC9C"
+                    AltHigh="Black"
+                    AltLow="Black"
+                    AltMedium="Black"
+                    AltMediumHigh="Black"
+                    AltMediumLow="Black"
+                    BaseHigh="White"
+                    BaseLow="#FF1A1F24"
+                    BaseMedium="#FF2F3642"
+                    BaseMediumHigh="#FF3D4A5B"
+                    BaseMediumLow="#FF263036"
+                    ChromeAltLow="#FF3D4A5B"
+                    ChromeBlackHigh="Black"
+                    ChromeBlackLow="#FF3D4A5B"
+                    ChromeBlackMedium="Black"
+                    ChromeBlackMediumLow="Black"
+                    ChromeDisabledHigh="#FF1A1F24"
+                    ChromeDisabledLow="#FF2F3642"
+                    ChromeGray="#FF33404C"
+                    ChromeHigh="#FF33404C"
+                    ChromeLow="#FF101418"
+                    ChromeMedium="#FF1B222A"
+                    ChromeMediumLow="#FF2A313B"
+                    ChromeWhite="White"
+                    ListLow="#FF1B222A"
+                    ListMedium="#FF2F3642"
+                    RegionColor="#FF0F1216" />
+            </FluentTheme.Palettes>
+        </FluentTheme>
 
-					BaseHigh="Black"
-					BaseLow="#FFECF0F1"
-					BaseMedium="#FFD1EDEE"
-					BaseMediumHigh="#FFA0D5C3"
-					BaseMediumLow="#FF80C5B8"
-
-					ChromeAltLow="#FFA0D5C3"
-					ChromeBlackHigh="Black"
-					ChromeBlackLow="#FFECF0F1"
-					ChromeBlackMedium="#FFA0D5C3"
-					ChromeBlackMediumLow="#FFD1EDEE"
-					ChromeDisabledHigh="#FFECF0F1"
-					ChromeDisabledLow="#FFA0D5C3"
-					ChromeGray="#FF80C5B8"
-					ChromeHigh="#FFECF0F1"
-					ChromeLow="#FFF1FEF9"
-					ChromeMedium="#FFE0F7EE"
-					ChromeMediumLow="#FFF1FEF9"
-					ChromeWhite="White"
-
-					ListLow="#FFE0F7EE"
-					ListMedium="#FFD1EDEE"
-					RegionColor="#FFF1FEF9" />
-
-				<!-- Dark palette with the same teal accent -->
-				<ColorPaletteResources
-					x:Key="Dark"
-					Accent="#FF1ABC9C"
-
-					AltHigh="Black"
-					AltLow="Black"
-					AltMedium="Black"
-					AltMediumHigh="Black"
-					AltMediumLow="Black"
-
-					BaseHigh="White"
-					BaseLow="#FF1A1F24"
-					BaseMedium="#FF2F3642"
-					BaseMediumHigh="#FF3D4A5B"
-					BaseMediumLow="#FF263036"
-
-					ChromeAltLow="#FF3D4A5B"
-					ChromeBlackHigh="Black"
-					ChromeBlackLow="#FF3D4A5B"
-					ChromeBlackMedium="Black"
-					ChromeBlackMediumLow="Black"
-					ChromeDisabledHigh="#FF1A1F24"
-					ChromeDisabledLow="#FF2F3642"
-					ChromeGray="#FF33404C"
-					ChromeHigh="#FF33404C"
-					ChromeLow="#FF101418"
-					ChromeMedium="#FF1B222A"
-					ChromeMediumLow="#FF2A313B"
-					ChromeWhite="White"
-
-					ListLow="#FF1B222A"
-					ListMedium="#FF2F3642"
-					RegionColor="#FF0F1216" />
-			</FluentTheme.Palettes>
-		</FluentTheme>
-
-        <Style Selector="TextBox:pointerover /template/ Border#PART_BorderElement">
-            <Setter Property="Background" Value="{DynamicResource TextBoxHoverBg}" />
-        </Style>
-
-        <Style Selector="TextBox:focus-within /template/ Border#PART_BorderElement">
-            <Setter Property="Background" Value="{DynamicResource TextBoxFocusBg}" />
-        </Style>
+		<StyleInclude Source="avares://Scry/Styles/CommandLineStyles.axaml" />
+		<StyleInclude Source="avares://Scry/Styles/ActivePhaseStyles.axaml" />
+		<StyleInclude Source="avares://Scry/Styles/ResultListStyles.axaml" />
     </Application.Styles>
 
-	<Application.Resources>
-		<Color x:Key="PrimaryColor">#1ABC9C</Color>
+    <Application.Resources>
+        <Color x:Key="PrimaryColor">#1ABC9C</Color>
 
-		<SolidColorBrush x:Key="TextBoxHoverBg" Color="#221ABC9C" />
-		<SolidColorBrush x:Key="TextBoxFocusBg" Color="#441ABC9C" />
-	</Application.Resources>
+        <SolidColorBrush x:Key="TextBoxHoverBg" Color="#221ABC9C" />
+        <SolidColorBrush x:Key="TextBoxFocusBg" Color="#441ABC9C" />
+    </Application.Resources>
 </Application>

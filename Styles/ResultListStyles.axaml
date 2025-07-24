@@ -1,0 +1,43 @@
+<Styles xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Style Selector="ListBox.ResultList">
+        <Setter Property="Margin" Value="0,8,0,0" />
+        <Setter Property="Padding" Value="0,0,8,0" />
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="FontSize" Value="13" />
+        <Setter Property="Foreground" Value="#FFECF0F1" />
+    </Style>
+
+    <Style Selector="ListBox.ResultList > ListBoxItem">
+        <Setter Property="Padding" Value="8,4" />
+        <Setter Property="Margin" Value="2,1" />
+        <Setter Property="FontFamily" Value="Segoe UI" />
+        <Setter Property="FontSize" Value="14" />
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="Foreground" Value="#FFECF0F1" />
+        <Setter Property="Template">
+            <ControlTemplate>
+                <Border
+                    Name="border"
+                    Padding="{TemplateBinding Padding}"
+                    Background="{TemplateBinding Background}"
+                    CornerRadius="4">
+                    <ContentPresenter
+                        HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                        VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
+                        Content="{TemplateBinding Content}"
+                        ContentTemplate="{TemplateBinding ContentTemplate}" />
+                </Border>
+            </ControlTemplate>
+        </Setter>
+    </Style>
+
+    <Style Selector="ListBox.ResultList > ListBoxItem:pointerover">
+        <Setter Property="Background" Value="#FF3D4A5B" />
+    </Style>
+
+    <Style Selector="ListBox.ResultList > ListBoxItem:selected">
+        <Setter Property="Background" Value="#FF16A085" />
+        <Setter Property="Foreground" Value="White" />
+    </Style>
+</Styles>
