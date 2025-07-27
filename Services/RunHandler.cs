@@ -12,6 +12,7 @@ public class RunHandler : ICommandHandler
 {
     public string Prefix => "run";
     public string Description => "start menu apps";
+    public bool IsEntryless => false;
 
     private List<ListEntry>? _cache;
 

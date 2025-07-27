@@ -16,7 +16,8 @@ public class ProcessExecutor
             new RunHandler(),
             new ExeHandler(),
             new WebHandler(),
-            new ScriptHandler()
+            new ScriptHandler(),
+            new SearchHandler()
         };
         _handlers = list.ToDictionary(h => h.Prefix, StringComparer.OrdinalIgnoreCase);
     }

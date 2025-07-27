@@ -10,7 +10,8 @@ namespace Scry.Services;
 public class ScriptHandler : ICommandHandler
 {
     public string Prefix => "script";
-    public string Description => "placeholder";
+    public string Description => "placeholder, not implemented";
+    public bool IsEntryless => false;
 
     private readonly string _scriptsFolder =
         Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "ScryScripts");

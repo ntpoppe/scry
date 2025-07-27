@@ -9,7 +9,8 @@ namespace Scry.Services;
 public class WebHandler : ICommandHandler
 {
     public string Prefix => "web";
-    public string Description => "placeholder";
+    public string Description => "open webpage";
+    public bool IsEntryless => false;
 
     private readonly Dictionary<string, string> _map = new()
     {

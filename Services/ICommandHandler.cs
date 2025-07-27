@@ -24,4 +24,10 @@ public interface ICommandHandler
     /// Execute the given key (which must be one of GetOptions()).
     /// </summary>
     ExecuteResult Execute(string key);
+
+    /// <summary>
+    /// Whether this handler accepts any input (doesn't require predefined options).
+    /// Entryless handlers can execute with any string input.
+    /// </summary>
+    bool IsEntryless { get; }
 }

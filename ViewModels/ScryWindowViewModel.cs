@@ -89,6 +89,12 @@ public partial class ScryWindowViewModel : ViewModelBase
             return;
         }
 
+        if (CurrentHandler?.IsEntryless == true && !string.IsNullOrWhiteSpace(CommandText.Trim()))
+        {
+            Execute();
+            return;
+        }
+
         if (SelectedItem == null)
         {
             ErrorMessage = "Invalid command";
@@ -128,10 +134,16 @@ public partial class ScryWindowViewModel : ViewModelBase
     private void HandleArgumentFiltering(string[] parts)
     {
         var remainder = parts.Length > 1 ? parts[1] : string.Empty;
-        var commands = _executor.GetOptions(CurrentHandler!.Prefix);
+        
+        if (CurrentHandler!.IsEntryless)
+        {
+            PopulateItems(Enumerable.Empty<ListEntry>());
+            return;
+        }
 
+        var commands = _executor.GetOptions(CurrentHandler.Prefix);
         PopulateItems(
-            commands.Where(cmd => cmd.Value.StartsWith(remainder, StringComparison.OrdinalIgnoreCase))
+            commands.Where(cmd => IsFuzzyMatch(cmd.Value, remainder))
         );
 
         MoveDown();
@@ -149,7 +161,7 @@ public partial class ScryWindowViewModel : ViewModelBase
         // Still typing prefix - filter available prefixes
         var filter = parts.Length >= 1 ? parts[0] : string.Empty;
         PopulateItems(
-            GetListEntries().Where(p => p.Value.StartsWith(filter, StringComparison.OrdinalIgnoreCase))
+            GetListEntries().Where(p => IsFuzzyMatch(p.Value, filter))
         );
 
         MoveDown();
@@ -240,10 +252,15 @@ public partial class ScryWindowViewModel : ViewModelBase
         if (parts.Length < 2 || CurrentHandler is null)
             return false;
 
+        var argument = string.Join(" ", parts.Skip(1)).Trim();
+        
+        // Entryless handlers can execute with any non-empty argument
+        if (CurrentHandler.IsEntryless)
+            return !string.IsNullOrWhiteSpace(argument);
+
+        // For handlers with predefined options, check if argument matches
         var prefixKey = CurrentHandler.Prefix;
         var opts = _executor.GetOptions(prefixKey);
-        var argument = string.Join(" ", parts.Skip(1)).Trim();
-
         return opts.Any(o => o.Value.Equals(argument, StringComparison.OrdinalIgnoreCase));
     }
 
@@ -367,4 +384,35 @@ public partial class ScryWindowViewModel : ViewModelBase
 
     public void Cancel()
         => CancelRequested?.Invoke(this, EventArgs.Empty);
+
+    /// <summary>
+    /// Performs fuzzy matching between a target string and a query
+    /// Returns true if the query characters appear in the target in order (case-insensitive)
+    /// </summary>
+    private bool IsFuzzyMatch(string target, string query)
+    {
+        if (string.IsNullOrEmpty(query)) return true;
+        if (string.IsNullOrEmpty(target)) return false;
+
+        // First try exact prefix match (highest priority)
+        if (target.StartsWith(query, StringComparison.OrdinalIgnoreCase))
+            return true;
+
+        // Then try fuzzy match
+        var targetLower = target.ToLowerInvariant();
+        var queryLower = query.ToLowerInvariant();
+
+        int queryIndex = 0;
+        int targetIndex = 0;
+
+        while (queryIndex < queryLower.Length && targetIndex < targetLower.Length)
+        {
+            if (queryLower[queryIndex] == targetLower[targetIndex])
+                queryIndex++;
+
+            targetIndex++;
+        }
+
+        return queryIndex == queryLower.Length;
+    }
 }
