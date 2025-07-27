@@ -38,6 +38,7 @@ public partial class ScryWindowViewModel : ViewModelBase
 
     public string ActivePhase => CurrentHandler == null ? "action" : "argument";
 
+    public IRelayCommand ItemClickCommand { get; }
     public IRelayCommand CancelCommand { get; }
     public IRelayCommand EnterCommand { get; }
     public IRelayCommand TabCommand { get; }
@@ -57,6 +58,7 @@ public partial class ScryWindowViewModel : ViewModelBase
         MoveUpCommand = new RelayCommand(MoveUp);
         MoveDownCommand = new RelayCommand(MoveDown);
         CancelCommand = new RelayCommand(Cancel);
+        ItemClickCommand = new RelayCommand<ListEntry>(ItemClick);
 
         PopulateItems(GetListEntries());
     }
@@ -66,140 +68,171 @@ public partial class ScryWindowViewModel : ViewModelBase
         if (_suppressChange) return;
         ErrorMessage = null;
 
-        // if we had a prefix but the text no longer starts with it, reset
-        if (CurrentHandler is not null)
-        {
-            var expectedStart = CurrentHandler.Prefix + " ";
-            if (!value.StartsWith(expectedStart, StringComparison.OrdinalIgnoreCase))
-            {
-                CurrentHandler = null;
-            }
-        }
+        // Reset handler if command text no longer starts with current prefix
+        ResetHandlerIfNeeded(value);
 
         var parts = value.Split(new[] { ' ' }, 2, StringSplitOptions.None);
-
         ExecuteReadyByExactMatch = CheckIfExecutable(parts);
 
-        // if we already have a prefix, filter commands  
-        if (CurrentHandler is not null)
-        {
-            var remainder = parts.Length > 1 ? parts[1] : string.Empty;
-            var prefixKey = CurrentHandler.Prefix;
-            var commands = _executor.GetOptions(prefixKey);
-
-            PopulateItems(
-                commands
-                    .Where(cmd => cmd.Value.StartsWith(remainder, StringComparison.OrdinalIgnoreCase))
-            );
-
-            MoveDown();
-            return;
-        }
-
-        // no prefix yet -> have we typed one exactly?  
-        if (parts.Length == 1)
-        {
-            var candidate = parts[0];
-            // do we have a prefix whose name == candidate?  
-            if (_executor.TryGetHandler(candidate, out var handler))
-            {
-                // user has finished typing the prefix  
-                CurrentHandler = handler;
-
-                // include the trailing space in CommandText so they can start the next word  
-                _suppressChange = true;
-                CommandText = CurrentHandler.Prefix.ToLowerInvariant() + " ";
-                _suppressChange = false;
-
-                CaretMoveRequested?.Invoke(this, EventArgs.Empty);
-
-                // show that prefix's options  
-                var prefixKey = CurrentHandler.Prefix;
-                var options = _executor.GetOptions(prefixKey);
-                PopulateItems(options);
-
-                MoveDown();
-                return;
-            }
-        }
-
-        // still typing a prefix -> live‐filter on what they've entered so far  
-        var filter = parts.Length >= 1 ? parts[0] : string.Empty;
-        PopulateItems(
-            GetListEntries()
-              .Where(p => p.Value.StartsWith(filter, StringComparison.OrdinalIgnoreCase))
-        );
-
-        MoveDown();
+        if (CurrentHandler != null)
+            HandleArgumentFiltering(parts);
+        else
+            HandlePrefixFiltering(parts);
     }
 
     private void EnterPressed()
     {
-        // fully-typed commands
+        // Execute if we have a complete command
         if (ExecuteReadyByExactMatch)
         {
             Execute();
             return;
         }
 
-        // no handler yet -> pick the handler name
-        if (CurrentHandler == null && SelectedItem != null)
+        if (SelectedItem == null)
         {
-            CommandText = $"{SelectedItem.Value}";
-            CaretMoveRequested?.Invoke(this, EventArgs.Empty);
+            ErrorMessage = "Invalid command";
             return;
         }
 
-        // have a handler + a selection -> build “prefix argument” and run
-        if (CurrentHandler != null && SelectedItem != null)
-        {
-            CommandText = $"{CurrentHandler.Prefix} {SelectedItem.Value}";
-            Execute();
-            return;
-        }
-
-        ErrorMessage = "Invalid command";
+        // Handle selection-based completion
+        if (CurrentHandler == null)
+            CompletePrefixSelection(SelectedItem);
+        else
+            CompleteAndExecuteArgument(SelectedItem);
     }
 
     private void TabPressed()
     {
         if (SetPrefix()) return;
-        ChooseCommand();
+
+        if (CurrentHandler != null && SelectedItem != null)
+            CompleteArgument(SelectedItem);
     }
 
-    private bool SetPrefix()
+    /// <summary>
+    /// Resets the current handler if the command text no longer starts with the expected prefix
+    /// </summary>
+    private void ResetHandlerIfNeeded(string commandText)
     {
-        // if we don’t yet have a handler selected, and the SelectedItem is one of our prefixes…
-        if (CurrentHandler == null
-            && SelectedItem is not null
-            && _executor.TryGetHandler(SelectedItem.Value.ToLowerInvariant(), out var handler))
+        if (CurrentHandler == null) return;
+
+        var expectedStart = CurrentHandler.Prefix + " ";
+        if (!commandText.StartsWith(expectedStart, StringComparison.OrdinalIgnoreCase))
+            CurrentHandler = null;
+    }
+
+    /// <summary>
+    /// Handles filtering when we have a prefix selected and are typing arguments
+    /// </summary>
+    private void HandleArgumentFiltering(string[] parts)
+    {
+        var remainder = parts.Length > 1 ? parts[1] : string.Empty;
+        var commands = _executor.GetOptions(CurrentHandler!.Prefix);
+
+        PopulateItems(
+            commands.Where(cmd => cmd.Value.StartsWith(remainder, StringComparison.OrdinalIgnoreCase))
+        );
+
+        MoveDown();
+    }
+
+    /// <summary>
+    /// Handles filtering when we're still typing the prefix
+    /// </summary>
+    private void HandlePrefixFiltering(string[] parts)
+    {
+        // Check if we've typed a complete prefix
+        if (parts.Length == 1 && TrySetPrefixFromText(parts[0]))
+            return;
+
+        // Still typing prefix - filter available prefixes
+        var filter = parts.Length >= 1 ? parts[0] : string.Empty;
+        PopulateItems(
+            GetListEntries().Where(p => p.Value.StartsWith(filter, StringComparison.OrdinalIgnoreCase))
+        );
+
+        MoveDown();
+    }
+
+    /// <summary>
+    /// Attempts to set the current handler based on the typed text
+    /// </summary>
+    private bool TrySetPrefixFromText(string candidate)
+    {
+        if (_executor.TryGetHandler(candidate, out var handler))
         {
-            CurrentHandler = handler;
-
-            _suppressChange = true;
-            CommandText = handler.Prefix + " ";
-            _suppressChange = false;
-
-            CaretMoveRequested?.Invoke(this, EventArgs.Empty);
-
-            // load that handler’s options
-            PopulateItems(handler.GetOptions());
-            SelectedIndex = Items.Any() ? 0 : -1;
-
+            SetCurrentHandler(handler);
             return true;
         }
 
         return false;
     }
 
-    private void ChooseCommand()
+    /// <summary>
+    /// Sets the current handler and updates the UI accordingly
+    /// </summary>
+    private void SetCurrentHandler(ICommandHandler handler)
     {
-        if (ExecuteReadyByExactMatch) return;
+        CurrentHandler = handler;
 
-        CommandText = $"{CurrentHandler?.Prefix} {SelectedItem?.Value}";
+        _suppressChange = true;
+        CommandText = handler.Prefix.ToLowerInvariant() + " ";
+        _suppressChange = false;
+
+        CaretMoveRequested?.Invoke(this, EventArgs.Empty);
+
+        // Load options for this handler
+        var options = _executor.GetOptions(handler.Prefix);
+        PopulateItems(options);
+
+        MoveDown();
+    }
+
+    /// <summary>
+    /// Completes a prefix selection (Tab behavior)
+    /// </summary>
+    private void CompletePrefixSelection(ListEntry entry)
+    {
+        if (_executor.TryGetHandler(entry.Value.ToLowerInvariant(), out var handler))
+        {
+            SetCurrentHandler(handler);
+        }
+        else
+        {
+            // If it's not a prefix, treat as direct command? Not sure
+            CommandText = entry.Value;
+            Execute();
+        }
+    }
+
+    /// <summary>
+    /// Completes an argument and executes it (Enter behavior)
+    /// </summary>
+    private void CompleteAndExecuteArgument(ListEntry entry)
+    {
+        var completeCommand = $"{CurrentHandler!.Prefix} {entry.Value}";
+        CommandText = completeCommand;
+        Execute();
+    }
+
+    /// <summary>
+    /// Completes a command without executing (Tab behavior)
+    /// </summary>
+    private void CompleteArgument(ListEntry entry)
+    {
+        CommandText = $"{CurrentHandler!.Prefix} {entry.Value}";
         CaretMoveRequested?.Invoke(this, EventArgs.Empty);
         Items.Clear();
         ExecuteReadyByExactMatch = true;
+    }
+
+    private bool SetPrefix()
+    {
+        if (CurrentHandler == null && SelectedItem != null)
+            return TrySetPrefixFromText(SelectedItem.Value.ToLowerInvariant());
+
+        return false;
     }
 
     private bool CheckIfExecutable(string[] parts)
@@ -209,7 +242,9 @@ public partial class ScryWindowViewModel : ViewModelBase
 
         var prefixKey = CurrentHandler.Prefix;
         var opts = _executor.GetOptions(prefixKey);
-        return opts.Any(o => o.Value.Equals(parts[1].Trim(), StringComparison.OrdinalIgnoreCase));
+        var argument = string.Join(" ", parts.Skip(1)).Trim();
+
+        return opts.Any(o => o.Value.Equals(argument, StringComparison.OrdinalIgnoreCase));
     }
 
     private void Execute()
@@ -237,6 +272,80 @@ public partial class ScryWindowViewModel : ViewModelBase
     {
         if (SelectedIndex < Items.Count - 1)
             SelectedIndex++;
+    }
+
+    private void ItemClick(ListEntry? entry)
+    {
+        if (entry == null) return;
+
+        // Case 1: No current handler - this is a prefix selection
+        if (CurrentHandler == null)
+        {
+            HandlePrefixSelection(entry);
+            return;
+        }
+
+        // Case 2: We have a handler and this is an argument selection
+        if (CurrentHandler != null)
+        {
+            HandleArgumentSelection(entry);
+            return;
+        }
+    }
+
+    /// <summary>
+    /// Handles selection of a command prefix (e.g., "run", "web", etc.)
+    /// Sets the prefix and loads available options for that command type
+    /// </summary>
+    private void HandlePrefixSelection(ListEntry entry)
+    {
+        // Check if this entry represents a valid command prefix
+        if (_executor.TryGetHandler(entry.Value.ToLowerInvariant(), out var handler))
+        {
+            // Set the current handler and update command text
+            CurrentHandler = handler;
+
+            _suppressChange = true;
+            CommandText = $"{handler.Prefix} ";
+            _suppressChange = false;
+
+            // Move caret to end of command text
+            CaretMoveRequested?.Invoke(this, EventArgs.Empty);
+
+            // Load available options for this command type
+            PopulateItems(handler.GetOptions());
+            SelectedIndex = Items.Any() ? 0 : -1;
+        }
+        else
+        {
+            // If it's not a prefix, treat it as a direct command execution
+            CommandText = entry.Value;
+            Execute();
+        }
+    }
+
+    /// <summary>
+    /// Handles selection of an argument for the current command
+    /// Either completes the command text or executes it directly
+    /// </summary>
+    private void HandleArgumentSelection(ListEntry entry)
+    {
+        // Build the complete command with prefix and selected argument
+        var completeCommand = $"{CurrentHandler!.Prefix} {entry.Value}";
+
+        // Check if this is a valid executable command
+        if (CheckIfExecutable(completeCommand.Split(' ')))
+        {
+            // Valid command - execute it directly
+            CommandText = completeCommand;
+            Execute();
+        }
+        else
+        {
+            // Not a complete command yet - just update the text
+            CommandText = completeCommand;
+            CaretMoveRequested?.Invoke(this, EventArgs.Empty);
+        }
     }
 
     public IEnumerable<ListEntry> GetListEntries()

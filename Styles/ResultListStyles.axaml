@@ -56,4 +56,10 @@
     <Style Selector="ListBox.ResultList > ListBoxItem:selected TextBlock.SecondaryText">
         <Setter Property="Foreground" Value="White" />
     </Style>
+
+    <Style Selector="ListBox.ResultList > ListBoxItem Button:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="BorderBrush" Value="Transparent" />
+        <Setter Property="Foreground" Value="{TemplateBinding Foreground}" />
+    </Style>
 </Styles>
