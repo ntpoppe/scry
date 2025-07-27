@@ -78,4 +78,25 @@ public partial class App : Application
             w.Activate();
         }
     }
+
+    private void OnOpenScryClick(object? sender, EventArgs e)
+    {
+        if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
+        {
+            var window = desktop.MainWindow as ScryWindow;
+            if (window != null)
+            {
+                window.Show();
+                window.Activate();
+            }
+        }
+    }
+
+    private void OnExitClick(object? sender, EventArgs e)
+    {
+        if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
+        {
+            desktop.Shutdown();
+        }
+    }
 }

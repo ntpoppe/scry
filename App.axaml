@@ -15,9 +15,9 @@
             <TrayIcon Icon="/Assets/avalonia-logo.ico" ToolTipText="Scry">
                 <TrayIcon.Menu>
                     <NativeMenu>
-                        <NativeMenuItem Header="Open Scry" />
+                        <NativeMenuItem Header="Open Scry" Click="OnOpenScryClick" />
                         <NativeMenuItemSeparator />
-                        <NativeMenuItem Header="Exit" />
+                        <NativeMenuItem Header="Exit" Click="OnExitClick" />
                     </NativeMenu>
                 </TrayIcon.Menu>
             </TrayIcon>
