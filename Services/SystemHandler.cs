@@ -23,11 +23,7 @@ public class SystemHandler : ICommandHandler
             ["sleep"] = Sleep,
             ["shutdown"] = Shutdown,
             ["restart"] = Restart,
-            ["vol up"] = VolumeUp,
-            ["vol down"] = VolumeDown,
             ["mute"] = Mute,
-            ["bright up"] = BrightnessUp,
-            ["bright down"] = BrightnessDown,
             ["tasks"] = TaskManager,
             ["cpanel"] = ControlPanel,
             ["devices"] = DeviceManager,
@@ -43,11 +39,7 @@ public class SystemHandler : ICommandHandler
             "sleep",
             "shutdown",
             "restart",
-            "vol up",
-            "vol down",
             "mute",
-            "bright up",
-            "bright down",
             "tasks",
             "cpanel",
             "devices",
@@ -64,11 +56,7 @@ public class SystemHandler : ICommandHandler
             "sleep" => "put computer to sleep",
             "shutdown" => "shutdown the computer",
             "restart" => "restart the computer",
-            "vol up" => "increase volume",
-            "vol down" => "decrease volume",
             "mute" => "toggle mute",
-            "bright up" => "increase brightness",
-            "bright down" => "decrease brightness",
             "tasks" => "open task manager",
             "cpanel" => "open control panel",
             "devices" => "open device manager",
@@ -144,29 +132,6 @@ public class SystemHandler : ICommandHandler
 
         return new ExecuteResult(false, "Restart not supported on this platform");
     }
-
-    private ExecuteResult VolumeUp()
-    {
-        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-        {
-            Process.Start("powershell", "-Command \"(New-Object -ComObject WScript.Shell).SendKeys([char]175)\"");
-            return new ExecuteResult(true);
-        }
-
-        return new ExecuteResult(false, "Volume control not supported on this platform");
-    }
-
-    private ExecuteResult VolumeDown()
-    {
-        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-        {
-            Process.Start("powershell", "-Command \"(New-Object -ComObject WScript.Shell).SendKeys([char]174)\"");
-            return new ExecuteResult(true);
-        }
-
-        return new ExecuteResult(false, "Volume control not supported on this platform");
-    }
-
     private ExecuteResult Mute()
     {
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
@@ -176,28 +141,6 @@ public class SystemHandler : ICommandHandler
         }
 
         return new ExecuteResult(false, "Mute not supported on this platform");
-    }
-
-    private ExecuteResult BrightnessUp()
-    {
-        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-        {
-            Process.Start("powershell", "-Command \"(New-Object -ComObject WScript.Shell).SendKeys([char]145)\"");
-            return new ExecuteResult(true);
-        }
-
-        return new ExecuteResult(false, "Brightness control not supported on this platform");
-    }
-
-    private ExecuteResult BrightnessDown()
-    {
-        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-        {
-            Process.Start("powershell", "-Command \"(New-Object -ComObject WScript.Shell).SendKeys([char]145)\"");
-            return new ExecuteResult(true);
-        }
-
-        return new ExecuteResult(false, "Brightness control not supported on this platform");
     }
 
     private ExecuteResult TaskManager()

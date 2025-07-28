@@ -2,6 +2,7 @@ using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Threading;
 using Scry.ViewModels;
+using System;
 
 namespace Scry.Views;
 
@@ -10,7 +11,11 @@ public partial class ScryWindow : Window
     public ScryWindow()
     {
         InitializeComponent();
-        var vm = new ScryWindowViewModel();
+        var clipboard = TopLevel.GetTopLevel(this)?.Clipboard;
+        if (clipboard == null)
+            throw new InvalidOperationException("clipboard null in ScryWindow initialization");
+
+        var vm = new ScryWindowViewModel(clipboard);
         DataContext = vm;
 
         vm.CaretMoveRequested += (_, _) => MoveCaretToEnd();

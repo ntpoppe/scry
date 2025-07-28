@@ -1,4 +1,5 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
+﻿using Avalonia.Input.Platform;
+using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Scry.Models;
 using Scry.Services;
@@ -47,7 +48,7 @@ public partial class ScryWindowViewModel : ViewModelBase
 
     public ObservableCollection<ListEntry> Items { get; } = new();
 
-    public ScryWindowViewModel() : this(new ProcessExecutor()) { }
+    public ScryWindowViewModel(IClipboard clipboard) : this(new ProcessExecutor(clipboard)) { }
 
     public ScryWindowViewModel(ProcessExecutor executor)
     {
@@ -134,7 +135,7 @@ public partial class ScryWindowViewModel : ViewModelBase
     private void HandleArgumentFiltering(string[] parts)
     {
         var remainder = parts.Length > 1 ? parts[1] : string.Empty;
-        
+
         if (CurrentHandler!.IsEntryless)
         {
             PopulateItems(Enumerable.Empty<ListEntry>());
@@ -253,7 +254,7 @@ public partial class ScryWindowViewModel : ViewModelBase
             return false;
 
         var argument = string.Join(" ", parts.Skip(1)).Trim();
-        
+
         // Entryless handlers can execute with any non-empty argument
         if (CurrentHandler.IsEntryless)
             return !string.IsNullOrWhiteSpace(argument);

@@ -1,4 +1,6 @@
-﻿using Scry.Models;
+﻿using Avalonia.Input.Platform;
+using Scry.Handlers;
+using Scry.Models;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
@@ -9,7 +11,7 @@ public class ProcessExecutor
 {
     private readonly Dictionary<string, ICommandHandler> _handlers;
 
-    public ProcessExecutor()
+    public ProcessExecutor(IClipboard clipboard)
     {
         var list = new List<ICommandHandler>
         {
@@ -18,7 +20,8 @@ public class ProcessExecutor
             new WebHandler(),
             new ScriptHandler(),
             new SearchHandler(),
-            new SystemHandler()
+            new SystemHandler(),
+            new ClipboardHandler(clipboard)
         };
         _handlers = list.ToDictionary(h => h.Prefix, StringComparer.OrdinalIgnoreCase);
     }

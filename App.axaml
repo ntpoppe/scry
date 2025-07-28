@@ -12,7 +12,7 @@
 
     <TrayIcon.Icons>
         <TrayIcons>
-            <TrayIcon Icon="/Assets/avalonia-logo.ico" ToolTipText="Scry">
+            <TrayIcon Icon="/Assets/scry.ico" ToolTipText="Scry">
                 <TrayIcon.Menu>
                     <NativeMenu>
                         <NativeMenuItem Header="Open Scry" Click="OnOpenScryClick" />
