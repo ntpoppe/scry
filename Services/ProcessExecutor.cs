@@ -11,6 +11,12 @@ public class ProcessExecutor
 {
     private readonly Dictionary<string, ICommandHandler> _handlers;
 
+    // For designer
+    public ProcessExecutor()
+    {
+        _handlers = new Dictionary<string, ICommandHandler>();
+    }
+
     public ProcessExecutor(IClipboard clipboard)
     {
         var list = new List<ICommandHandler>

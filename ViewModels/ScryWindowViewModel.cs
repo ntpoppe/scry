@@ -48,6 +48,10 @@ public partial class ScryWindowViewModel : ViewModelBase
 
     public ObservableCollection<ListEntry> Items { get; } = new();
 
+#pragma warning disable CS8618
+    public ScryWindowViewModel() { }
+#pragma warning restore CS8618
+
     public ScryWindowViewModel(IClipboard clipboard) : this(new ProcessExecutor(clipboard)) { }
 
     public ScryWindowViewModel(ProcessExecutor executor)
@@ -366,8 +370,14 @@ public partial class ScryWindowViewModel : ViewModelBase
         }
     }
 
+    // null check added to satisfy designer...
     public IEnumerable<ListEntry> GetListEntries()
-        => _executor.ListEntries;
+    {
+        if (_executor == null)
+            return new[] { new ListEntry("run", "launch apps") };
+
+        return _executor.ListEntries;
+    }
 
     public void PopulateItems(IEnumerable<ListEntry> values)
     {
