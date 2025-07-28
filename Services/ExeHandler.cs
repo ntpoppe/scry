@@ -10,7 +10,7 @@ namespace Scry.Services;
 public class ExeHandler : ICommandHandler
 {
     public string Prefix => "exe";
-    public string Description => ".exes found in PATH";
+    public string Description => "launch executables from PATH";
     public bool IsEntryless => false;
 
     private Lazy<List<ListEntry>> _executables = new(() =>
