@@ -87,7 +87,7 @@
                 CornerRadius="4"
                 FontSize="13"
                 KeyDown="CommandTextBox_KeyDown"
-                MaxLength="25"
+                MaxLength="100"
                 Text="{Binding CommandText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                 Watermark="Type a command…" />
 
