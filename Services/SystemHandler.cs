@@ -20,29 +20,17 @@ public class SystemHandler : ICommandHandler
         _map = new Dictionary<string, Func<ExecuteResult>>(StringComparer.OrdinalIgnoreCase)
         {
             ["lock"] = LockScreen,
-            ["lock screen"] = LockScreen,
             ["sleep"] = Sleep,
-            ["suspend"] = Sleep,
             ["shutdown"] = Shutdown,
             ["restart"] = Restart,
-            ["volume up"] = VolumeUp,
-            ["volup"] = VolumeUp,
-            ["volume down"] = VolumeDown,
-            ["voldown"] = VolumeDown,
+            ["vol up"] = VolumeUp,
+            ["vol down"] = VolumeDown,
             ["mute"] = Mute,
-            ["brightness up"] = BrightnessUp,
-            ["brightup"] = BrightnessUp,
-            ["brightness down"] = BrightnessDown,
-            ["brightdown"] = BrightnessDown,
-            ["screenshot"] = Screenshot,
-            ["screen"] = Screenshot,
-            ["task manager"] = TaskManager,
+            ["bright up"] = BrightnessUp,
+            ["bright down"] = BrightnessDown,
             ["tasks"] = TaskManager,
-            ["control panel"] = ControlPanel,
-            ["cp"] = ControlPanel,
-            ["device manager"] = DeviceManager,
+            ["cpanel"] = ControlPanel,
             ["devices"] = DeviceManager,
-            ["system settings"] = SystemSettings,
             ["settings"] = SystemSettings
         };
     }
@@ -210,17 +198,6 @@ public class SystemHandler : ICommandHandler
         }
 
         return new ExecuteResult(false, "Brightness control not supported on this platform");
-    }
-
-    private ExecuteResult Screenshot()
-    {
-        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-        {
-            Process.Start("powershell", "-Command \"(New-Object -ComObject WScript.Shell).SendKeys([char]44)\"");
-            return new ExecuteResult(true);
-        }
-
-        return new ExecuteResult(false, "Screenshot not supported on this platform");
     }
 
     private ExecuteResult TaskManager()
